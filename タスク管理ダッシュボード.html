@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AGENT SUCCESS | タスク管理ダッシュボード</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --nb:#1A356E;--n1:#1B4F8A;--n2:#D6EAF8;
+  --og:#1B875E;--o2:#D5F5E3;
+  --gr:#10B981;--am:#F59E0B;--rd:#EF4444;--gy:#9CA3AF;
+  --bg:#F0F4F8;--card:#fff;--bd:#E5E7EB;
+  --tx:#1A356E;--txl:#6B7280;--txw:#fff
+}
+body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;
+  background:var(--bg);color:var(--tx);min-height:100vh;font-size:13px}
+
+/* ── HEADER ── */
+.hd{background:var(--nb);color:var(--txw);padding:16px 28px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:200;box-shadow:0 2px 10px rgba(0,0,0,.3)}
+.hd-l h1{font-size:15px;font-weight:800;letter-spacing:.02em}
+.hd-l h1 span{font-weight:400;opacity:.7}
+.hd-l p{font-size:10.5px;opacity:.55;margin-top:3px}
+.hd-r{display:flex;align-items:center;gap:24px}
+.ring-wrap{position:relative;width:58px;height:58px}
+.ring-wrap svg{transform:rotate(-90deg)}
+.ring-lbl{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  text-align:center;color:var(--txw)}
+.ring-lbl .rp{font-size:13px;font-weight:800;display:block;line-height:1}
+.ring-lbl .rl{font-size:8px;opacity:.6;display:block;margin-top:2px}
+.hd-stats{display:flex;gap:20px}
+.hd-stat .n{font-size:22px;font-weight:800;line-height:1}
+.hd-stat .l{font-size:9px;opacity:.6;margin-top:2px}
+
+/* ── ALERT BAR ── */
+.ab{background:#FEF3C7;border-bottom:2px solid #F59E0B;
+  padding:10px 28px;position:sticky;top:56px;z-index:150}
+.ab.has-overdue{background:#FEE2E2;border-color:#EF4444}
+.ab-inner{display:flex;align-items:flex-start;gap:12px}
+.ab-icon{font-size:20px;flex-shrink:0;margin-top:1px}
+.ab-body{flex:1}
+.ab-title{font-weight:800;font-size:12px;color:#92400E;margin-bottom:6px}
+.ab.has-overdue .ab-title{color:#991B1B}
+.ab-items{display:flex;flex-direction:column;gap:4px}
+.ab-item{display:flex;align-items:baseline;gap:7px;font-size:12px}
+.ab-tag{display:inline-block;padding:1px 8px;border-radius:10px;
+  font-size:10px;font-weight:700;white-space:nowrap;flex-shrink:0}
+.ab-tag.od{background:#FEE2E2;color:#B91C1C}
+.ab-tag.td{background:#FECACA;color:#991B1B}
+.ab-tag.sn{background:#FEF3C7;color:#92400E}
+.ab-task{color:#374151;line-height:1.4}
+.ab-close{background:none;border:none;cursor:pointer;font-size:18px;
+  color:#92400E;flex-shrink:0;padding:0 4px;line-height:1;opacity:.6}
+.ab-close:hover{opacity:1}
+
+/* ── MAIN ── */
+.main{padding:20px 28px;max-width:1380px;margin:0 auto}
+
+/* ── SEC TITLE ── */
+.sec-ttl{font-size:10.5px;font-weight:700;color:var(--txl);text-transform:uppercase;
+  letter-spacing:.07em;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.sec-ttl::after{content:'';flex:1;height:1px;background:var(--bd)}
+
+/* ── SESAKU GRID ── */
+.sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(186px,1fr));
+  gap:10px;margin-bottom:22px}
+.sc{background:var(--card);border-radius:10px;padding:13px 15px;
+  box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.sc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
+.sc-name{font-size:12px;font-weight:700;color:var(--tx);line-height:1.3}
+.sc-cat{font-size:9px;padding:2px 7px;border-radius:10px;font-weight:700;white-space:nowrap;margin-left:4px;flex-shrink:0}
+.sc-cat.cn{background:var(--n2);color:var(--n1)}
+.sc-cat.co{background:var(--o2);color:var(--og)}
+.sc-pct{font-size:24px;font-weight:800;line-height:1;margin-top:2px}
+.sc-cnt{font-size:10px;color:var(--txl);margin-top:2px}
+.bar{height:6px;background:#E5E7EB;border-radius:3px;overflow:hidden;margin-top:8px}
+.bar-i{height:100%;border-radius:3px;transition:width .4s ease}
+
+/* ── FILTER BAR ── */
+.fb{background:var(--card);border-radius:10px;padding:12px 16px;
+  margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.05);
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tabs{display:flex;gap:4px}
+.tab{padding:5px 14px;border-radius:20px;border:1.5px solid var(--bd);
+  background:var(--card);font-size:12px;font-weight:600;cursor:pointer;
+  color:var(--txl);transition:all .15s}
+.tab.a-all{background:var(--nb);color:var(--txw);border-color:var(--nb)}
+.tab.a-n{background:var(--n1);color:var(--txw);border-color:var(--n1)}
+.tab.a-o{background:var(--og);color:var(--txw);border-color:var(--og)}
+.fsel{padding:5px 28px 5px 10px;border-radius:8px;border:1.5px solid var(--bd);
+  font-size:12px;color:var(--tx);background:var(--card);cursor:pointer;
+  -webkit-appearance:none;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 8px center;min-width:130px}
+.fsel:focus{outline:none;border-color:var(--n1)}
+.ml-a{margin-left:auto}
+.rst-btn{padding:5px 12px;border-radius:8px;border:1.5px solid var(--rd);
+  color:var(--rd);background:var(--card);font-size:11px;font-weight:600;
+  cursor:pointer;transition:all .18s}
+.rst-btn:hover{background:#FEE2E2}
+.count-badge{display:inline-flex;align-items:center;justify-content:center;
+  width:20px;height:20px;background:rgba(255,255,255,.2);
+  border-radius:50%;font-size:10px;font-weight:700;margin-left:6px}
+
+/* ── TASK TABLE ── */
+.tw{background:var(--card);border-radius:10px;overflow:hidden;
+  box-shadow:0 1px 4px rgba(0,0,0,.07)}
+table{width:100%;border-collapse:collapse}
+thead th{background:var(--nb);color:var(--txw);padding:10px 8px;
+  text-align:left;font-size:10.5px;font-weight:700;white-space:nowrap}
+thead th:first-child{padding-left:10px;width:28px}
+thead th:nth-child(2){width:58px}
+thead th:nth-child(3){width:100px}
+thead th:nth-child(5){width:115px}
+thead th:nth-child(6){width:72px;text-align:center}
+thead th:nth-child(7){width:132px}
+thead th:nth-child(8){width:118px}
+tbody tr.mr{border-bottom:1px solid var(--bd);transition:background .12s}
+tbody tr.mr:hover{background:#F9FAFB}
+tbody tr.dr{display:none;border-bottom:1px solid var(--bd)}
+tbody tr.dr.open{display:table-row}
+td{padding:9px 8px;vertical-align:middle}
+td:first-child{padding-left:10px}
+
+/* ── CELL CONTENT ── */
+.cat-b{display:inline-block;padding:2px 8px;border-radius:10px;
+  font-size:9.5px;font-weight:700;white-space:nowrap}
+.cat-b.cn{background:var(--n2);color:var(--n1)}
+.cat-b.co{background:var(--o2);color:var(--og)}
+.sq{display:inline-block;font-size:10.5px;color:var(--txl);
+  background:#F3F4F6;padding:2px 7px;border-radius:4px;
+  white-space:nowrap;max-width:95px;overflow:hidden;text-overflow:ellipsis}
+.task-txt{font-size:12.5px;line-height:1.5;color:var(--tx)}
+.tanto-txt{font-size:11px;color:var(--txl);white-space:nowrap;max-width:110px}
+
+/* ── 期限 ── */
+.kg{font-size:11.5px;font-weight:700;white-space:nowrap;text-align:center;padding:0 4px}
+.kg.od{color:var(--rd)}
+.kg.td{color:var(--rd)}
+.kg.sn{color:var(--am)}
+.kg.ok{color:var(--txl)}
+.kg.rc{color:#8B7355;font-style:italic;font-size:10px}
+
+/* ── STATUS BUTTONS ── */
+.sbw{display:flex;gap:3px}
+.sb{padding:3px 7px;border-radius:6px;border:1.5px solid;
+  font-size:9.5px;font-weight:700;cursor:pointer;transition:all .12s;
+  background:var(--card);white-space:nowrap}
+.sb.s-ns{border-color:#D1D5DB;color:#9CA3AF}
+.sb.s-ns.act{background:#F3F4F6;color:#374151;border-color:#9CA3AF;font-weight:800}
+.sb.s-wip{border-color:#FCD34D;color:#D97706}
+.sb.s-wip.act{background:#FEF3C7;color:#B45309;border-color:var(--am);font-weight:800}
+.sb.s-dn{border-color:#6EE7B7;color:#059669}
+.sb.s-dn.act{background:#D1FAE5;color:#047857;border-color:var(--gr);font-weight:800}
+
+/* ── PROGRESS INPUT ── */
+.pw{display:flex;align-items:center;gap:6px}
+.pi{width:44px;padding:3px 4px;border-radius:6px;border:1.5px solid var(--bd);
+  font-size:12px;font-weight:700;text-align:center;color:var(--n1);flex-shrink:0}
+.pi:focus{outline:none;border-color:var(--n1)}
+.pct-lbl{font-size:10px;color:var(--txl);flex-shrink:0}
+.mb{flex:1;height:7px;background:#E5E7EB;border-radius:4px;overflow:hidden;min-width:30px}
+.mb-i{height:100%;border-radius:4px;transition:width .25s,background .25s}
+
+/* ── EXPAND ── */
+.xb{background:none;border:none;cursor:pointer;color:var(--txl);
+  font-size:14px;line-height:1;padding:0 2px;transition:color .15s;
+  font-weight:700;display:block;margin:0 auto}
+.xb:hover{color:var(--n1)}
+
+/* ── DETAIL ROW ── */
+.dc{padding:10px 16px 12px}
+.dr-bg{background:#F8FAFC}
+.dl{font-size:9.5px;font-weight:700;color:var(--txl);text-transform:uppercase;
+  letter-spacing:.06em;margin-bottom:3px;margin-top:10px}
+.dl:first-child{margin-top:0}
+.dv{font-size:12px;color:var(--tx);line-height:1.55}
+
+/* ── COUNT INPUT ── */
+.count-wrap{display:flex;align-items:center;gap:8px;padding:6px 10px;
+  background:#EFF6FF;border-radius:8px;border:1.5px solid #BFDBFE}
+.count-in{width:54px;padding:4px 6px;border-radius:6px;border:1.5px solid #93C5FD;
+  font-size:14px;font-weight:800;text-align:center;color:var(--n1);background:white}
+.count-in:focus{outline:none;border-color:var(--n1)}
+.count-sep{font-size:12px;color:var(--txl);font-weight:600;white-space:nowrap}
+.count-bar-outer{flex:1;height:8px;background:#DBEAFE;border-radius:4px;overflow:hidden;min-width:60px}
+.count-bar-inner{height:100%;border-radius:4px;transition:width .3s,background .3s}
+.count-pct-lbl{font-size:13px;font-weight:800;color:var(--n1);white-space:nowrap;min-width:36px}
+
+/* ── MEMO ── */
+.memo-ta{width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid var(--bd);
+  font-family:inherit;font-size:12px;color:var(--tx);resize:vertical;
+  min-height:70px;line-height:1.6;background:#FAFAFA;
+  transition:border-color .15s}
+.memo-ta:focus{outline:none;border-color:var(--n1);background:white}
+.memo-ta::placeholder{color:#D1D5DB}
+
+/* ── EMPTY ── */
+.empty{padding:40px;text-align:center;color:var(--txl);font-size:13px}
+
+/* ── DONE ROW ── */
+.done-row .task-txt{text-decoration:line-through;opacity:.5}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  .hd{padding:12px 14px}
+  .hd-stats{display:none}
+  .main{padding:12px}
+  .ab{padding:10px 14px;top:52px}
+}
+@media(max-width:700px){
+  thead th:nth-child(5),tbody td:nth-child(5),
+  thead th:nth-child(3),tbody td:nth-child(3){display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header class="hd">
+  <div class="hd-l">
+    <h1>AGENT SUCCESS <span>タスク管理ダッシュボード</span></h1>
+    <p>2026年6月17日 打ち合わせ ｜ 3ヶ月目標：月間200件問い合わせ・40社受注（最大80社）</p>
+  </div>
+  <div class="hd-r">
+    <div class="ring-wrap">
+      <svg width="58" height="58" viewBox="0 0 58 58">
+        <circle cx="29" cy="29" r="24" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="5"/>
+        <circle id="ringFill" cx="29" cy="29" r="24" fill="none" stroke="#4ADE80"
+          stroke-width="5" stroke-linecap="round"
+          stroke-dasharray="150.796" stroke-dashoffset="150.796"/>
+      </svg>
+      <div class="ring-lbl"><span class="rp" id="ringPct">0%</span><span class="rl">完了率</span></div>
+    </div>
+    <div class="hd-stats">
+      <div class="hd-stat"><div class="n" id="hT">0</div><div class="l">全タスク</div></div>
+      <div class="hd-stat"><div class="n" style="color:#4ADE80" id="hD">0</div><div class="l">完了</div></div>
+      <div class="hd-stat"><div class="n" style="color:#FCD34D" id="hW">0</div><div class="l">進行中</div></div>
+      <div class="hd-stat"><div class="n" style="color:#94A3B8" id="hN">0</div><div class="l">未着手</div></div>
+    </div>
+  </div>
+</header>
+
+<!-- ── ALERT BAR ── -->
+<div id="alertBar" class="ab" style="display:none">
+  <div class="ab-inner">
+    <span class="ab-icon">⚠️</span>
+    <div class="ab-body">
+      <div class="ab-title" id="alertTitle">期限が迫っているタスクがあります</div>
+      <div class="ab-items" id="alertItems"></div>
+    </div>
+    <button class="ab-close" onclick="document.getElementById('alertBar').style.display='none'">✕</button>
+  </div>
+</div>
+
+<main class="main">
+  <!-- 施策別進捗 -->
+  <div class="sec-ttl">施策別進捗</div>
+  <div class="sg" id="sesakuGrid"></div>
+
+  <!-- フィルター -->
+  <div class="fb">
+    <div class="tabs">
+      <button class="tab a-all" id="tab-all" onclick="setTab('all')">全て<span class="count-badge" id="cnt-all">0</span></button>
+      <button class="tab" id="tab-野村" onclick="setTab('野村')">野村<span class="count-badge" id="cnt-野村">0</span></button>
+      <button class="tab" id="tab-お願い" onclick="setTab('お願い')">お願い<span class="count-badge" id="cnt-お願い">0</span></button>
+    </div>
+    <select class="fsel" id="sesakuSel" onchange="fSesaku=this.value;renderTable()">
+      <option value="">施策：全て</option>
+    </select>
+    <select class="fsel" id="statusSel" onchange="fStatus=this.value;renderTable()">
+      <option value="">ステータス：全て</option>
+      <option value="未着手">未着手</option>
+      <option value="進行中">進行中</option>
+      <option value="完了">完了</option>
+    </select>
+    <button class="rst-btn ml-a" onclick="resetAll()">↺ 進捗をリセット</button>
+  </div>
+
+  <!-- タスクテーブル -->
+  <div class="tw">
+    <table>
+      <thead>
+        <tr>
+          <th></th>
+          <th>大分類</th>
+          <th>施策</th>
+          <th>タスク</th>
+          <th>担当者</th>
+          <th style="text-align:center">期限</th>
+          <th>ステータス</th>
+          <th>進捗</th>
+        </tr>
+      </thead>
+      <tbody id="taskBody"></tbody>
+    </table>
+    <div class="empty" id="emptyState" style="display:none">該当するタスクがありません</div>
+  </div>
+</main>
+
+<script>
+// ══ TASK DATA ═══════════════════════════════════════════════════
+// ct = countTarget（件数カウントが使えるタスク）
+const TASKS = [
+  // ── 野村：YouTube ──
+  {id:1,cat:"野村",sesaku:"YouTube",task:"コラボ出演先チャンネルを10社以上リストアップする",tanto:"野村",kigen:"6/25",help:"高鍬さんにコネがあれば紹介をお願いしたい",kentou:"どの軸（業界・視聴者層）のチャンネルと組むと相乗効果が高いか"},
+  {id:2,cat:"野村",sesaku:"YouTube",task:"各社へアプローチ・出演依頼を送付する（10社）",tanto:"野村",kigen:"7/1",ct:10,help:"コネ先は高鍬さん・田之上さんからトスアップをお願いしたい",kentou:"アプローチ文のテンプレートを事前に用意する"},
+  {id:3,cat:"野村",sesaku:"YouTube",task:"動画編集体制を構築する（AI活用 or 外注チームに発注）",tanto:"野村（発注）＋外注",kigen:"6/30",help:"費用OK。AI編集ノウハウは高鍬さんから共有いただきたい",kentou:"AI編集ツール vs 外注チーム どちらで進めるかを決める"},
+  {id:4,cat:"野村",sesaku:"YouTube",task:"毎日露出スタート（外部出演＋自チャンネル）",tanto:"野村",kigen:"7/1",help:"",kentou:""},
+  // ── 野村：ウェビナー ──
+  {id:5,cat:"野村",sesaku:"ウェビナー",task:"残り15社へのアプローチ開始（打診・打ち合わせ設定）",tanto:"野村",kigen:"〜7/1",ct:15,help:"",kentou:"優先すべき企業の選定基準を整理する（集客力・テーマ親和性）"},
+  {id:6,cat:"野村",sesaku:"ウェビナー",task:"20社との合意・スケジュール確定",tanto:"野村",kigen:"7/15",ct:20,help:"",kentou:""},
+  {id:7,cat:"野村",sesaku:"ウェビナー",task:"8月〜の月4回実施スケジュールを設計する",tanto:"野村",kigen:"7/15",help:"",kentou:"1回あたりの集客目標100人に向けた各社の集客見込みを確認する"},
+  {id:8,cat:"野村",sesaku:"ウェビナー",task:"ウェビナー後のナーチャリング動線を設計する（50問診断ツール → 問い合わせ）",tanto:"野村",kigen:"7/31",help:"",kentou:"診断ツールをウェビナー参加者の着弾先として使うか設計を決める"},
+  // ── 野村：X毎日投稿 ──
+  {id:9,cat:"野村",sesaku:"X毎日投稿",task:"投稿方向性・テーマ・ターゲットをドラフト作成する",tanto:"野村",kigen:"6/25",help:"今岡さん（広報）にレビューを依頼する",kentou:"誰に何を伝えたいか・どんな問い合わせを獲得したいかを言語化する"},
+  {id:10,cat:"野村",sesaku:"X毎日投稿",task:"今岡さんとのすり合わせ・投稿方針を確定する",tanto:"野村＋今岡さん（広報）",kigen:"6/30",help:"今岡さんはアサイン予定（家庭事情確認中・6/18 改めて調整）",kentou:""},
+  {id:11,cat:"野村",sesaku:"X毎日投稿",task:"毎日投稿スタート（月単位でPDCAを回す）",tanto:"野村",kigen:"7/1",help:"",kentou:"1週間PDCAはNG。月単位で効果検証。投稿の「狙い」を必ず明文化する"},
+  // ── 野村：社労士提携 ──
+  {id:12,cat:"野村",sesaku:"社労士提携",task:"社労士1名と面談し感触・規模感をつかむ",tanto:"野村",kigen:"6/18",help:"",kentou:"月何件の人材紹介免許申請を扱っているかを必ず確認する"},
+  {id:13,cat:"野村",sesaku:"社労士提携",task:"アプローチ先リストを作成する（月3件以上扱う社労士・20名分）",tanto:"野村",kigen:"6/25",ct:20,help:"",kentou:"「月3件以上」の絞り込み条件が適切か、面談結果を踏まえて見直す"},
+  {id:14,cat:"野村",sesaku:"社労士提携",task:"成果報酬の設計を決定する（1件パス＝10万円案）",tanto:"野村",kigen:"6/25",help:"",kentou:"自社側のROAS（20件受注で400万 vs 報酬支払200万）を試算する"},
+  {id:15,cat:"野村",sesaku:"社労士提携",task:"20名へのアプローチ完了・提携確定",tanto:"野村",kigen:"7/15",ct:20,help:"",kentou:""},
+  // ── 野村：CS採用 ──
+  {id:16,cat:"野村",sesaku:"CS採用",task:"採用要件の定義（必須スキル・経験・稼働形態）",tanto:"野村",kigen:"7/1",help:"",kentou:"人材紹介経験者のどのスキルが必須か・最低ラインかを明確にする"},
+  {id:17,cat:"野村",sesaku:"CS採用",task:"採用媒体の選定・JD作成・採用活動開始",tanto:"野村",kigen:"7/15",help:"",kentou:"予算感・採用チャンネル（媒体 or 人脈紹介）を決める"},
+  // ── 野村：進行管理 ──
+  {id:18,cat:"野村",sesaku:"進行管理",task:"各施策のKPIを数値で定義する（伊藤さんと合意）",tanto:"野村＋伊藤さん",kigen:"6/20",help:"",kentou:"何をKPIとするか（アプローチ数・問い合わせ数・成約数）を合意する"},
+  {id:19,cat:"野村",sesaku:"進行管理",task:"KPIトラッキングシートの設計・作成",tanto:"野村",kigen:"6/20",help:"",kentou:"各施策のKPIと報告フォーマットを伊藤さんと合意する"},
+  {id:20,cat:"野村",sesaku:"進行管理",task:"週次報告フローの確立（毎週木曜日）",tanto:"野村",kigen:"6/24（初回）",help:"",kentou:""},
+  {id:21,cat:"野村",sesaku:"進行管理",task:"毎週木曜日に進捗報告を提出する",tanto:"野村",kigen:"毎週木",help:"",kentou:""},
+  {id:22,cat:"野村",sesaku:"進行管理",task:"毎週木曜日 進捗レポートを取りまとめて提出する",tanto:"野村",kigen:"毎週木",help:"",kentou:""},
+  // ── お願い：HP・メタ・SEO ──
+  {id:23,cat:"お願い",sesaku:"HP・メタ・SEO",task:"6/23 田之上さんとHP改修の方針・内部対応可否を確認する",tanto:"田之上さん（相談）＋支援チーム",kigen:"6/23",help:"【田之上さん相談で進める方針確定】内部対応可能か・外注が必要かを確認する",kentou:"改修の優先順位（診断ツール設置 vs フォーム動線改善）を決める"},
+  {id:24,cat:"お願い",sesaku:"HP・メタ・SEO",task:"HP問い合わせ動線の改修（診断ツール・フォーム設置）",tanto:"田之上さん（相談）＋支援チーム",kigen:"6/30",help:"田之上さんに相談",kentou:"LP一点集中 vs HP・note分散 → 田之上さんに相談して結論を出す（論点解消）"},
+  {id:25,cat:"お願い",sesaku:"HP・メタ・SEO",task:"メタ広告：予算・KPI・ROAS目標を設計する",tanto:"田之上さん（相談）＋支援チーム",kigen:"6/23",help:"田之上さんに相談して進める",kentou:"140件問い合わせ達成に向けた目標CPLと必要予算を試算する（初期テスト50万〜）"},
+  {id:26,cat:"お願い",sesaku:"HP・メタ・SEO",task:"メタ広告スタート",tanto:"支援チーム",kigen:"7/1",help:"",kentou:""},
+  {id:27,cat:"お願い",sesaku:"HP・メタ・SEO",task:"SEO記事・note量産開始 → 診断ツールへの動線設計",tanto:"支援チーム",kigen:"7/1",help:"",kentou:"キーワード設計（「人材紹介 立ち上げ」等）を先行して行う"},
+  // ── お願い：YouTube編集体制 ──
+  {id:28,cat:"お願い",sesaku:"YouTube編集体制",task:"編集体制の検討（AI活用 vs 外注チームアサイン）",tanto:"伊藤さん（大樹）",kigen:"6/25",help:"高鍬さんからAI編集ノウハウ・参考情報を共有いただきたい",kentou:"AI編集で賄えるか費用試算する。難しければ外注チームを探す"},
+  {id:29,cat:"お願い",sesaku:"YouTube編集体制",task:"編集チームへの正式発注・オンボーディング",tanto:"伊藤さん（大樹）",kigen:"6/30",help:"費用をかけてOK",kentou:"編集フォーマット・投稿ルール・概要欄テンプレートを整備する"},
+  // ── お願い：営業① ──
+  {id:30,cat:"お願い",sesaku:"営業①過去商談先",task:"過去商談リストの精査（相性・温度感でスコアリング）",tanto:"支援チーム",kigen:"6/25",help:"野村さんが7月下旬まで商談に動けない可能性あり。先行対応が重要",kentou:"どの会社から優先的にアプローチするか判断軸を決める"},
+  {id:31,cat:"お願い",sesaku:"営業①過去商談先",task:"選定リストへの再アプローチ開始（アポ取得・関係温め）",tanto:"支援チーム",kigen:"7/1",help:"野村さん不在の間のつなぎ役として動いてほしい",kentou:""},
+  // ── お願い：営業② ──
+  {id:32,cat:"お願い",sesaku:"営業②商談同行",task:"商談同行・スケジュール確定（佐野さん＋名古屋メンバー）",tanto:"佐野さん（兼業）＋名古屋メンバー",kigen:"7/1",help:"佐野さん（新卒採用・イベント事業兼業）はアサイン確定・共有済み。名古屋メンバーも追加アサイン予定",kentou:"佐野さん・名古屋メンバーそれぞれの商談担当日程を切る"},
+  {id:33,cat:"お願い",sesaku:"営業②商談同行",task:"野村さんへの商談レクチャー実施",tanto:"佐野さん＋名古屋メンバー＋野村",kigen:"7/15",help:"",kentou:""},
+  // ── お願い：営業③ ──
+  {id:34,cat:"お願い",sesaku:"営業③商談の質改善",task:"現状の商談フロー・トークのレビュー",tanto:"支援チーム",kigen:"7/1",help:"",kentou:"ヒアリング・提案・クロージングのどこがボトルネックかを特定する"},
+  {id:35,cat:"お願い",sesaku:"営業③商談の質改善",task:"改善フィードバック＋スクリプト修正・テコ入れ",tanto:"支援チーム",kigen:"7/15",help:"",kentou:""},
+  // ── お願い：リファラル ──
+  {id:36,cat:"お願い",sesaku:"リファラル施策",task:"【保留】他事業部のリファラル施策事例を共有してもらう",tanto:"高鍬さん（支援チーム）",kigen:"保留",help:"⚠️ 一旦保留決定。予実コントロールが難しいため、まず営業ロジック（勝ちパターン）の確立を優先する",kentou:"勝ちパターン確立・再現性が出た段階で改めて検討"},
+  {id:37,cat:"お願い",sesaku:"リファラル施策",task:"【保留】AGENT SUCCESS向けリファラル設計・導入",tanto:"野村＋支援チーム",kigen:"保留",help:"⚠️ 一旦保留決定。成約の再現性・勝ちパターンができたら着手",kentou:""},
+  // ── お願い：経理・法務 ──
+  {id:38,cat:"お願い",sesaku:"経理・契約・法務",task:"移譲可能な業務範囲を確認・整理する",tanto:"CCH（高鍬さん側）",kigen:"6/30",help:"✅ CCHで全部巻き取る想定。野村さんは営業活動に専念でOK",kentou:"どこから移譲するか優先順位を決める（経理→契約→法務の順？）"},
+  {id:39,cat:"お願い",sesaku:"経理・契約・法務",task:"段階的移譲の開始（CCH主導）",tanto:"CCH（高鍬さん側）",kigen:"7/1〜",help:"✅ 野村さんの関与は不要。CCH側で全対応",kentou:""},
+];
+
+// ══ STATE ═══════════════════════════════════════════════════════
+const SK = 'as_tasks_v2';
+let state = {};
+try { state = JSON.parse(localStorage.getItem(SK)) || {}; } catch(e) {}
+
+function gs(id) {
+  return state[id] || {status:'未着手', progress:0, count:0, memo:''};
+}
+function ss(id, s) {
+  state[id] = s;
+  try { localStorage.setItem(SK, JSON.stringify(state)); } catch(e) {}
+}
+
+// ══ FILTERS ═════════════════════════════════════════════════════
+let fCat = 'all', fSesaku = '', fStatus = '';
+
+function setTab(cat) {
+  fCat = cat;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('a-all','a-n','a-o'));
+  const cls = cat==='all'?'a-all':cat==='野村'?'a-n':'a-o';
+  document.getElementById('tab-'+cat).classList.add(cls);
+  populateSesakuFilter();
+  renderTable();
+}
+
+function filtered() {
+  return TASKS.filter(t => {
+    if (fCat !== 'all' && t.cat !== fCat) return false;
+    if (fSesaku && t.sesaku !== fSesaku) return false;
+    if (fStatus && gs(t.id).status !== fStatus) return false;
+    return true;
+  });
+}
+
+// ══ DEADLINE ════════════════════════════════════════════════════
+const TODAY = new Date(2026, 5, 18); // 2026-06-18
+
+function kigenInfo(kg) {
+  if (!kg) return {cls:'ok', lbl:kg};
+  if (kg === '保留') return {cls:'rc', lbl:'保留'};
+  if (kg.startsWith('毎週') || kg.endsWith('〜') || kg.startsWith('〜')) return {cls:'rc', lbl:kg};
+  const m = kg.match(/(\d+)\/(\d+)/);
+  if (!m) return {cls:'ok', lbl:kg};
+  const d = new Date(2026, parseInt(m[1])-1, parseInt(m[2]));
+  const diff = Math.floor((d - TODAY) / 86400000);
+  if (diff < 0)   return {cls:'od', lbl: kg + ' ⚠️'};
+  if (diff === 0)  return {cls:'td', lbl: kg + ' 本日'};
+  if (diff <= 2)   return {cls:'sn', lbl: kg};
+  return {cls:'ok', lbl: kg};
+}
+
+function deadlineDiff(kg) {
+  if (!kg) return null;
+  const m = kg.match(/(\d+)\/(\d+)/);
+  if (!m) return null;
+  const d = new Date(2026, parseInt(m[1])-1, parseInt(m[2]));
+  return Math.floor((d - TODAY) / 86400000);
+}
+
+// ══ COLORS ══════════════════════════════════════════════════════
+function pColor(pct) {
+  if (pct >= 100) return '#10B981';
+  if (pct >= 50)  return '#3B82F6';
+  if (pct > 0)    return '#F59E0B';
+  return '#D1D5DB';
+}
+
+// ══ STATE SETTERS ════════════════════════════════════════════════
+function setStatus(id, status) {
+  const s = gs(id);
+  s.status = status;
+  if (status === '完了')   s.progress = 100;
+  if (status === '未着手') s.progress = 0;
+  ss(id, s);
+  refreshRow(id);
+  updateSummary();
+}
+
+function setProgress(id, val) {
+  const v = Math.max(0, Math.min(100, parseInt(val) || 0));
+  const s = gs(id);
+  s.progress = v;
+  s.status = v === 100 ? '完了' : v === 0 ? '未着手' : '進行中';
+  ss(id, s);
+  refreshRow(id);
+  updateSummary();
+}
+
+function setCount(id, total, val) {
+  const v = Math.max(0, Math.min(total, parseInt(val) || 0));
+  const s = gs(id);
+  s.count = v;
+  s.progress = total > 0 ? Math.round(v / total * 100) : 0;
+  s.status = s.progress >= 100 ? '完了' : s.progress > 0 ? '進行中' : '未着手';
+  ss(id, s);
+  // update count bar and pct label
+  const cbi = document.getElementById('cbi-'+id);
+  const cpct = document.getElementById('cpct-'+id);
+  if (cbi) { cbi.style.width = s.progress+'%'; cbi.style.background = pColor(s.progress); }
+  if (cpct) cpct.textContent = s.progress+'%';
+  // sync the count input value
+  const ci = document.getElementById('ci-'+id);
+  if (ci && parseInt(ci.value) !== v) ci.value = v;
+  refreshRow(id);
+  updateSummary();
+}
+
+function setMemo(id, val) {
+  const s = gs(id);
+  s.memo = val;
+  ss(id, s);
+}
+
+function toggleDetail(id) {
+  const dr = document.getElementById('dr-'+id);
+  if (!dr) return;
+  dr.classList.toggle('open');
+  const xb = document.getElementById('xb-'+id);
+  if (xb) xb.textContent = dr.classList.contains('open') ? '▲' : '▼';
+}
+
+// ══ REFRESH ROW ═════════════════════════════════════════════════
+function refreshRow(id) {
+  const s = gs(id);
+  const pct = s.progress;
+  const col = pColor(pct);
+
+  const pi = document.getElementById('pi-'+id);
+  if (pi) pi.value = pct;
+  const mbi = document.getElementById('mbi-'+id);
+  if (mbi) { mbi.style.width = pct+'%'; mbi.style.background = col; }
+
+  ['未着手','進行中','完了'].forEach(st => {
+    const btn = document.getElementById('sb-'+id+'-'+st);
+    if (btn) btn.classList.toggle('act', s.status === st);
+  });
+
+  const mr = document.getElementById('mr-'+id);
+  if (mr) {
+    mr.style.opacity = s.status === '完了' ? '0.5' : '1';
+    mr.classList.toggle('done-row', s.status === '完了');
+  }
+}
+
+// ══ RENDER ROW HTML ══════════════════════════════════════════════
+function rowHtml(t) {
+  const s = gs(t.id);
+  const pct = s.progress;
+  const col = pColor(pct);
+  const isN = t.cat === '野村';
+  const ki = kigenInfo(t.kigen);
+  const isDone = s.status === '完了';
+  const opacity = isDone ? ' style="opacity:.5"' : '';
+  const doneClass = isDone ? ' done-row' : '';
+
+  let h = `<tr class="mr${doneClass}" id="mr-${t.id}"${opacity}>`;
+  h += `<td><button class="xb" id="xb-${t.id}" onclick="toggleDetail(${t.id})">▼</button></td>`;
+  h += `<td><span class="cat-b ${isN?'cn':'co'}">${t.cat}</span></td>`;
+  h += `<td><span class="sq" title="${t.sesaku}">${t.sesaku}</span></td>`;
+  h += `<td><div class="task-txt">${t.task}</div></td>`;
+  h += `<td><div class="tanto-txt">${t.tanto}</div></td>`;
+  h += `<td><div class="kg ${ki.cls}">${ki.lbl}</div></td>`;
+  h += `<td><div class="sbw">`;
+  [['未着手','s-ns'],['進行中','s-wip'],['完了','s-dn']].forEach(([st, cls]) => {
+    h += `<button class="sb ${cls}${s.status===st?' act':''}" id="sb-${t.id}-${st}" onclick="setStatus(${t.id},'${st}')">${st}</button>`;
+  });
+  h += `</div></td>`;
+  h += `<td><div class="pw">`;
+  h += `<input class="pi" id="pi-${t.id}" type="number" min="0" max="100" value="${pct}" onchange="setProgress(${t.id},this.value)" oninput="setProgress(${t.id},this.value)">`;
+  h += `<span class="pct-lbl">%</span>`;
+  h += `<div class="mb"><div class="mb-i" id="mbi-${t.id}" style="width:${pct}%;background:${col}"></div></div>`;
+  h += `</div></td>`;
+  h += `</tr>`;
+
+  // ── DETAIL ROW ──
+  h += `<tr class="dr dr-bg" id="dr-${t.id}"><td colspan="8"><div class="dc">`;
+
+  // 件数カウント（ctがある場合）
+  if (t.ct) {
+    const cnt = s.count || 0;
+    const cPct = Math.round(cnt / t.ct * 100);
+    const cCol = pColor(cPct);
+    h += `<div class="dl">📊 件数カウント</div>`;
+    h += `<div class="count-wrap">`;
+    h += `<input class="count-in" id="ci-${t.id}" type="number" min="0" max="${t.ct}" value="${cnt}" `;
+    h += `onchange="setCount(${t.id},${t.ct},this.value)" oninput="setCount(${t.id},${t.ct},this.value)">`;
+    h += `<span class="count-sep">/ ${t.ct}件</span>`;
+    h += `<div class="count-bar-outer"><div class="count-bar-inner" id="cbi-${t.id}" style="width:${cPct}%;background:${cCol}"></div></div>`;
+    h += `<span class="count-pct-lbl" id="cpct-${t.id}">${cPct}%</span>`;
+    h += `</div>`;
+  }
+
+  // ヘルプ
+  if (t.help) { h += `<div class="dl">ヘルプ・サポートコメント</div><div class="dv">${t.help}</div>`; }
+
+  // 検討事項
+  if (t.kentou) { h += `<div class="dl">開始前に検討すること</div><div class="dv">${t.kentou}</div>`; }
+
+  // メモ（全タスク）
+  h += `<div class="dl">📝 メモ</div>`;
+  const memo = (s.memo || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  h += `<textarea class="memo-ta" id="memo-${t.id}" placeholder="メモを入力..." oninput="setMemo(${t.id},this.value)">${memo}</textarea>`;
+
+  h += `</div></td></tr>`;
+  return h;
+}
+
+// ══ RENDER TABLE ════════════════════════════════════════════════
+function renderTable() {
+  const tbody = document.getElementById('taskBody');
+  const tasks = filtered();
+  document.getElementById('emptyState').style.display = tasks.length ? 'none' : '';
+  tbody.innerHTML = tasks.map(rowHtml).join('');
+}
+
+// ══ SESAKU FILTER ════════════════════════════════════════════════
+function populateSesakuFilter() {
+  const sel = document.getElementById('sesakuSel');
+  const cur = sel.value;
+  const visible = fCat === 'all' ? TASKS : TASKS.filter(t => t.cat === fCat);
+  const sesakus = [...new Set(visible.map(t => t.sesaku))];
+  sel.innerHTML = '<option value="">施策：全て</option>';
+  sesakus.forEach(s => {
+    const o = document.createElement('option');
+    o.value = s; o.textContent = s;
+    if (s === cur) o.selected = true;
+    sel.appendChild(o);
+  });
+  if (!sesakus.includes(cur)) { fSesaku = ''; sel.value = ''; }
+}
+
+// ══ ALERTS ══════════════════════════════════════════════════════
+function renderAlerts() {
+  const alertBar = document.getElementById('alertBar');
+  const alertItems = document.getElementById('alertItems');
+  const alertTitle = document.getElementById('alertTitle');
+
+  const urgent = TASKS.filter(t => {
+    if (gs(t.id).status === '完了') return false;
+    const diff = deadlineDiff(t.kigen);
+    if (diff === null) return false;
+    return diff <= 2; // 2日以内（超過含む）
+  }).map(t => ({...t, diff: deadlineDiff(t.kigen)}))
+    .sort((a, b) => a.diff - b.diff);
+
+  if (urgent.length === 0) {
+    alertBar.style.display = 'none';
+    return;
+  }
+
+  const hasOverdue = urgent.some(t => t.diff < 0);
+  alertBar.style.display = '';
+  alertBar.className = 'ab' + (hasOverdue ? ' has-overdue' : '');
+  alertTitle.textContent = hasOverdue
+    ? `⚠️ 期限超過・期限が迫っているタスクがあります（${urgent.length}件）`
+    : `⚠️ 期限が2日以内のタスクがあります（${urgent.length}件）`;
+
+  alertItems.innerHTML = urgent.map(t => {
+    const diff = t.diff;
+    let tagCls, tagLbl;
+    if (diff < 0)    { tagCls = 'od'; tagLbl = `期限超過（${t.kigen}）`; }
+    else if (diff === 0) { tagCls = 'td'; tagLbl = `本日（${t.kigen}）`; }
+    else             { tagCls = 'sn'; tagLbl = `${diff}日後（${t.kigen}）`; }
+    const isN = t.cat === '野村';
+    const badge = `<span style="font-size:9px;padding:1px 5px;border-radius:8px;font-weight:700;background:${isN?'#D6EAF8':'#D5F5E3'};color:${isN?'#1B4F8A':'#1B875E'}">${t.cat}</span>`;
+    return `<div class="ab-item">${badge} <span class="ab-tag ${tagCls}">${tagLbl}</span> <span class="ab-task">${t.task}</span></div>`;
+  }).join('');
+}
+
+// ══ UPDATE SUMMARY ════════════════════════════════════════════
+function updateSummary() {
+  const all = TASKS.map(t => ({...t, st: gs(t.id).status}));
+  const done = all.filter(t => t.st === '完了').length;
+  const wip  = all.filter(t => t.st === '進行中').length;
+  const tot  = TASKS.length;
+  const pct  = tot > 0 ? Math.round(done / tot * 100) : 0;
+
+  document.getElementById('hT').textContent = tot;
+  document.getElementById('hD').textContent = done;
+  document.getElementById('hW').textContent = wip;
+  document.getElementById('hN').textContent = tot - done - wip;
+  document.getElementById('ringPct').textContent = pct + '%';
+  const circ = 2 * Math.PI * 24;
+  document.getElementById('ringFill').setAttribute('stroke-dashoffset', circ * (1 - pct / 100));
+
+  ['野村','お願い'].forEach(cat => {
+    document.getElementById('cnt-'+cat).textContent = TASKS.filter(t => t.cat === cat).length;
+  });
+  document.getElementById('cnt-all').textContent = tot;
+
+  // sesaku grid
+  const sesakuMap = {};
+  TASKS.forEach(t => {
+    const k = t.sesaku + '||' + t.cat;
+    if (!sesakuMap[k]) sesakuMap[k] = {sesaku:t.sesaku, cat:t.cat, tot:0, done:0, wip:0};
+    sesakuMap[k].tot++;
+    const st = gs(t.id).status;
+    if (st === '完了')       sesakuMap[k].done++;
+    else if (st === '進行中') sesakuMap[k].wip++;
+  });
+
+  const grid = document.getElementById('sesakuGrid');
+  grid.innerHTML = Object.values(sesakuMap).map(({sesaku, cat, tot, done, wip}) => {
+    const p = tot > 0 ? Math.round(done / tot * 100) : 0;
+    const c = pColor(p);
+    const isN = cat === '野村';
+    return `<div class="sc">
+      <div class="sc-top">
+        <div>
+          <div class="sc-name">${sesaku}</div>
+          <div class="sc-cnt">${done}/${tot} 完了${wip > 0 ? ' · ' + wip + ' 進行中' : ''}</div>
+        </div>
+        <span class="sc-cat ${isN?'cn':'co'}">${cat}</span>
+      </div>
+      <div class="sc-pct" style="color:${c}">${p}%</div>
+      <div class="bar"><div class="bar-i" style="width:${p}%;background:${c}"></div></div>
+    </div>`;
+  }).join('');
+
+  renderAlerts();
+}
+
+// ══ RESET ════════════════════════════════════════════════════════
+function resetAll() {
+  if (!confirm('全タスクの進捗・メモをリセットしますか？\nこの操作は元に戻せません。')) return;
+  state = {};
+  try { localStorage.removeItem(SK); } catch(e) {}
+  renderTable();
+  updateSummary();
+}
+
+// ══ INIT ════════════════════════════════════════════════════════
+populateSesakuFilter();
+renderTable();
+updateSummary();
+</script>
+</body>
+</html>
