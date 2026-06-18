@@ -100,11 +100,6 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans
   color:var(--rd);background:var(--card);font-size:11px;font-weight:600;
   cursor:pointer;transition:all .18s}
 .rst-btn:hover{background:#FEE2E2}
-.save-btn{padding:5px 14px;border-radius:8px;border:none;
-  background:var(--n1);color:white;font-size:11px;font-weight:700;
-  cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:5px}
-.save-btn:hover{background:var(--nb)}
-.save-btn.flash{background:var(--gr)}
 .count-badge{display:inline-flex;align-items:center;justify-content:center;
   width:20px;height:20px;background:rgba(255,255,255,.2);
   border-radius:50%;font-size:10px;font-weight:700;margin-left:6px}
@@ -197,8 +192,7 @@ td:first-child{padding-left:10px}
 /* ── MEMO ── */
 .memo-ta{width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid var(--bd);
   font-family:inherit;font-size:12px;color:var(--tx);resize:vertical;
-  min-height:70px;line-height:1.6;background:#FAFAFA;
-  transition:border-color .15s}
+  min-height:70px;line-height:1.6;background:#FAFAFA;transition:border-color .15s}
 .memo-ta:focus{outline:none;border-color:var(--n1);background:white}
 .memo-ta::placeholder{color:#D1D5DB}
 
@@ -281,8 +275,7 @@ td:first-child{padding-left:10px}
       <option value="進行中">進行中</option>
       <option value="完了">完了</option>
     </select>
-    <button class="save-btn ml-a" id="saveBtn" onclick="saveAsHtml()">💾 変更を保存する</button>
-    <button class="rst-btn" onclick="resetAll()">↺ リセット</button>
+    <button class="rst-btn ml-a" onclick="resetAll()">↺ 進捗をリセット</button>
   </div>
 
   <!-- タスクテーブル -->
@@ -364,9 +357,10 @@ const TASKS = [
   {id:39,cat:"お願い",sesaku:"経理・契約・法務",task:"段階的移譲の開始（CCH主導）",tanto:"CCH（高鍬さん側）",kigen:"7/1〜",help:"✅ 野村さんの関与は不要。CCH側で全対応",kentou:""},
 ];
 
-// ══ STATE ═══════════════════════════════════════════════════════
+// ══ LOCALSTORAGE STATE ══════════════════════════════════════════
+// 操作のたびに自動保存。ページリロード・ブラウザ再起動後も復元される。
 const SK = 'as_tasks_v2';
-let state = {}; // __SAVED_STATE__
+let state = {};
 try { state = JSON.parse(localStorage.getItem(SK)) || {}; } catch(e) {}
 
 function gs(id) {
@@ -399,7 +393,7 @@ function filtered() {
 }
 
 // ══ DEADLINE ════════════════════════════════════════════════════
-const TODAY = new Date(2026, 5, 18); // 2026-06-18
+const TODAY = new Date(2026, 5, 18);
 
 function kigenInfo(kg) {
   if (!kg) return {cls:'ok', lbl:kg};
@@ -409,7 +403,7 @@ function kigenInfo(kg) {
   if (!m) return {cls:'ok', lbl:kg};
   const d = new Date(2026, parseInt(m[1])-1, parseInt(m[2]));
   const diff = Math.floor((d - TODAY) / 86400000);
-  if (diff < 0)   return {cls:'od', lbl: kg + ' ⚠️'};
+  if (diff < 0)    return {cls:'od', lbl: kg + ' ⚠️'};
   if (diff === 0)  return {cls:'td', lbl: kg + ' 本日'};
   if (diff <= 2)   return {cls:'sn', lbl: kg};
   return {cls:'ok', lbl: kg};
@@ -419,8 +413,7 @@ function deadlineDiff(kg) {
   if (!kg) return null;
   const m = kg.match(/(\d+)\/(\d+)/);
   if (!m) return null;
-  const d = new Date(2026, parseInt(m[1])-1, parseInt(m[2]));
-  return Math.floor((d - TODAY) / 86400000);
+  return Math.floor((new Date(2026, parseInt(m[1])-1, parseInt(m[2])) - TODAY) / 86400000);
 }
 
 // ══ COLORS ══════════════════════════════════════════════════════
@@ -459,12 +452,10 @@ function setCount(id, total, val) {
   s.progress = total > 0 ? Math.round(v / total * 100) : 0;
   s.status = s.progress >= 100 ? '完了' : s.progress > 0 ? '進行中' : '未着手';
   ss(id, s);
-  // update count bar and pct label
   const cbi = document.getElementById('cbi-'+id);
   const cpct = document.getElementById('cpct-'+id);
-  if (cbi) { cbi.style.width = s.progress+'%'; cbi.style.background = pColor(s.progress); }
-  if (cpct) cpct.textContent = s.progress+'%';
-  // sync the count input value
+  if (cbi)  { cbi.style.width = s.progress+'%'; cbi.style.background = pColor(s.progress); }
+  if (cpct) { cpct.textContent = s.progress+'%'; }
   const ci = document.getElementById('ci-'+id);
   if (ci && parseInt(ci.value) !== v) ci.value = v;
   refreshRow(id);
@@ -490,17 +481,14 @@ function refreshRow(id) {
   const s = gs(id);
   const pct = s.progress;
   const col = pColor(pct);
-
   const pi = document.getElementById('pi-'+id);
   if (pi) pi.value = pct;
   const mbi = document.getElementById('mbi-'+id);
   if (mbi) { mbi.style.width = pct+'%'; mbi.style.background = col; }
-
   ['未着手','進行中','完了'].forEach(st => {
     const btn = document.getElementById('sb-'+id+'-'+st);
     if (btn) btn.classList.toggle('act', s.status === st);
   });
-
   const mr = document.getElementById('mr-'+id);
   if (mr) {
     mr.style.opacity = s.status === '完了' ? '0.5' : '1';
@@ -516,10 +504,8 @@ function rowHtml(t) {
   const isN = t.cat === '野村';
   const ki = kigenInfo(t.kigen);
   const isDone = s.status === '完了';
-  const opacity = isDone ? ' style="opacity:.5"' : '';
-  const doneClass = isDone ? ' done-row' : '';
 
-  let h = `<tr class="mr${doneClass}" id="mr-${t.id}"${opacity}>`;
+  let h = `<tr class="mr${isDone?' done-row':''}" id="mr-${t.id}"${isDone?' style="opacity:.5"':''}>`;
   h += `<td><button class="xb" id="xb-${t.id}" onclick="toggleDetail(${t.id})">▼</button></td>`;
   h += `<td><span class="cat-b ${isN?'cn':'co'}">${t.cat}</span></td>`;
   h += `<td><span class="sq" title="${t.sesaku}">${t.sesaku}</span></td>`;
@@ -535,38 +521,26 @@ function rowHtml(t) {
   h += `<input class="pi" id="pi-${t.id}" type="number" min="0" max="100" value="${pct}" onchange="setProgress(${t.id},this.value)" oninput="setProgress(${t.id},this.value)">`;
   h += `<span class="pct-lbl">%</span>`;
   h += `<div class="mb"><div class="mb-i" id="mbi-${t.id}" style="width:${pct}%;background:${col}"></div></div>`;
-  h += `</div></td>`;
-  h += `</tr>`;
+  h += `</div></td></tr>`;
 
   // ── DETAIL ROW ──
   h += `<tr class="dr dr-bg" id="dr-${t.id}"><td colspan="8"><div class="dc">`;
-
-  // 件数カウント（ctがある場合）
   if (t.ct) {
     const cnt = s.count || 0;
     const cPct = Math.round(cnt / t.ct * 100);
-    const cCol = pColor(cPct);
     h += `<div class="dl">📊 件数カウント</div>`;
     h += `<div class="count-wrap">`;
-    h += `<input class="count-in" id="ci-${t.id}" type="number" min="0" max="${t.ct}" value="${cnt}" `;
-    h += `onchange="setCount(${t.id},${t.ct},this.value)" oninput="setCount(${t.id},${t.ct},this.value)">`;
+    h += `<input class="count-in" id="ci-${t.id}" type="number" min="0" max="${t.ct}" value="${cnt}" onchange="setCount(${t.id},${t.ct},this.value)" oninput="setCount(${t.id},${t.ct},this.value)">`;
     h += `<span class="count-sep">/ ${t.ct}件</span>`;
-    h += `<div class="count-bar-outer"><div class="count-bar-inner" id="cbi-${t.id}" style="width:${cPct}%;background:${cCol}"></div></div>`;
+    h += `<div class="count-bar-outer"><div class="count-bar-inner" id="cbi-${t.id}" style="width:${cPct}%;background:${pColor(cPct)}"></div></div>`;
     h += `<span class="count-pct-lbl" id="cpct-${t.id}">${cPct}%</span>`;
     h += `</div>`;
   }
-
-  // ヘルプ
-  if (t.help) { h += `<div class="dl">ヘルプ・サポートコメント</div><div class="dv">${t.help}</div>`; }
-
-  // 検討事項
-  if (t.kentou) { h += `<div class="dl">開始前に検討すること</div><div class="dv">${t.kentou}</div>`; }
-
-  // メモ（全タスク）
+  if (t.help)   h += `<div class="dl">ヘルプ・サポートコメント</div><div class="dv">${t.help}</div>`;
+  if (t.kentou) h += `<div class="dl">開始前に検討すること</div><div class="dv">${t.kentou}</div>`;
   h += `<div class="dl">📝 メモ</div>`;
-  const memo = (s.memo || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const memo = (s.memo || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   h += `<textarea class="memo-ta" id="memo-${t.id}" placeholder="メモを入力..." oninput="setMemo(${t.id},this.value)">${memo}</textarea>`;
-
   h += `</div></td></tr>`;
   return h;
 }
@@ -597,36 +571,33 @@ function populateSesakuFilter() {
 
 // ══ ALERTS ══════════════════════════════════════════════════════
 function renderAlerts() {
-  const alertBar = document.getElementById('alertBar');
+  const alertBar   = document.getElementById('alertBar');
   const alertItems = document.getElementById('alertItems');
   const alertTitle = document.getElementById('alertTitle');
 
-  const urgent = TASKS.filter(t => {
-    if (gs(t.id).status === '完了') return false;
-    const diff = deadlineDiff(t.kigen);
-    if (diff === null) return false;
-    return diff <= 2; // 2日以内（超過含む）
-  }).map(t => ({...t, diff: deadlineDiff(t.kigen)}))
+  const urgent = TASKS
+    .filter(t => {
+      if (gs(t.id).status === '完了') return false;
+      const diff = deadlineDiff(t.kigen);
+      return diff !== null && diff <= 2;
+    })
+    .map(t => ({...t, diff: deadlineDiff(t.kigen)}))
     .sort((a, b) => a.diff - b.diff);
 
-  if (urgent.length === 0) {
-    alertBar.style.display = 'none';
-    return;
-  }
+  if (urgent.length === 0) { alertBar.style.display = 'none'; return; }
 
   const hasOverdue = urgent.some(t => t.diff < 0);
   alertBar.style.display = '';
   alertBar.className = 'ab' + (hasOverdue ? ' has-overdue' : '');
   alertTitle.textContent = hasOverdue
-    ? `⚠️ 期限超過・期限が迫っているタスクがあります（${urgent.length}件）`
-    : `⚠️ 期限が2日以内のタスクがあります（${urgent.length}件）`;
+    ? `期限超過・期限が迫っているタスクがあります（${urgent.length}件）`
+    : `期限が2日以内のタスクがあります（${urgent.length}件）`;
 
   alertItems.innerHTML = urgent.map(t => {
-    const diff = t.diff;
-    let tagCls, tagLbl;
-    if (diff < 0)    { tagCls = 'od'; tagLbl = `期限超過（${t.kigen}）`; }
-    else if (diff === 0) { tagCls = 'td'; tagLbl = `本日（${t.kigen}）`; }
-    else             { tagCls = 'sn'; tagLbl = `${diff}日後（${t.kigen}）`; }
+    const d = t.diff;
+    const [tagCls, tagLbl] = d < 0  ? ['od', `期限超過（${t.kigen}）`]
+                           : d === 0 ? ['td', `本日（${t.kigen}）`]
+                           :           ['sn', `${d}日後（${t.kigen}）`];
     const isN = t.cat === '野村';
     const badge = `<span style="font-size:9px;padding:1px 5px;border-radius:8px;font-weight:700;background:${isN?'#D6EAF8':'#D5F5E3'};color:${isN?'#1B4F8A':'#1B875E'}">${t.cat}</span>`;
     return `<div class="ab-item">${badge} <span class="ab-tag ${tagCls}">${tagLbl}</span> <span class="ab-task">${t.task}</span></div>`;
@@ -635,9 +606,8 @@ function renderAlerts() {
 
 // ══ UPDATE SUMMARY ════════════════════════════════════════════
 function updateSummary() {
-  const all = TASKS.map(t => ({...t, st: gs(t.id).status}));
-  const done = all.filter(t => t.st === '完了').length;
-  const wip  = all.filter(t => t.st === '進行中').length;
+  const done = TASKS.filter(t => gs(t.id).status === '完了').length;
+  const wip  = TASKS.filter(t => gs(t.id).status === '進行中').length;
   const tot  = TASKS.length;
   const pct  = tot > 0 ? Math.round(done / tot * 100) : 0;
 
@@ -646,15 +616,14 @@ function updateSummary() {
   document.getElementById('hW').textContent = wip;
   document.getElementById('hN').textContent = tot - done - wip;
   document.getElementById('ringPct').textContent = pct + '%';
-  const circ = 2 * Math.PI * 24;
-  document.getElementById('ringFill').setAttribute('stroke-dashoffset', circ * (1 - pct / 100));
+  document.getElementById('ringFill')
+    .setAttribute('stroke-dashoffset', (2 * Math.PI * 24) * (1 - pct / 100));
 
   ['野村','お願い'].forEach(cat => {
     document.getElementById('cnt-'+cat).textContent = TASKS.filter(t => t.cat === cat).length;
   });
   document.getElementById('cnt-all').textContent = tot;
 
-  // sesaku grid
   const sesakuMap = {};
   TASKS.forEach(t => {
     const k = t.sesaku + '||' + t.cat;
@@ -664,18 +633,14 @@ function updateSummary() {
     if (st === '完了')       sesakuMap[k].done++;
     else if (st === '進行中') sesakuMap[k].wip++;
   });
-
-  const grid = document.getElementById('sesakuGrid');
-  grid.innerHTML = Object.values(sesakuMap).map(({sesaku, cat, tot, done, wip}) => {
+  document.getElementById('sesakuGrid').innerHTML = Object.values(sesakuMap).map(({sesaku,cat,tot,done,wip}) => {
     const p = tot > 0 ? Math.round(done / tot * 100) : 0;
     const c = pColor(p);
     const isN = cat === '野村';
     return `<div class="sc">
       <div class="sc-top">
-        <div>
-          <div class="sc-name">${sesaku}</div>
-          <div class="sc-cnt">${done}/${tot} 完了${wip > 0 ? ' · ' + wip + ' 進行中' : ''}</div>
-        </div>
+        <div><div class="sc-name">${sesaku}</div>
+        <div class="sc-cnt">${done}/${tot} 完了${wip>0?' · '+wip+' 進行中':''}</div></div>
         <span class="sc-cat ${isN?'cn':'co'}">${cat}</span>
       </div>
       <div class="sc-pct" style="color:${c}">${p}%</div>
@@ -684,48 +649,6 @@ function updateSummary() {
   }).join('');
 
   renderAlerts();
-}
-
-// ══ SAVE AS HTML ════════════════════════════════════════════════
-function saveAsHtml() {
-  const btn = document.getElementById('saveBtn');
-  try {
-    // outerHTML からページ全体を取得
-    const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-
-    // __SAVED_STATE__ マーカーの行を現在のstateで上書き
-    const stateJson = JSON.stringify(state);
-    const updated = html.replace(
-      /let state = .*; \/\/ __SAVED_STATE__/,
-      `let state = ${stateJson}; // __SAVED_STATE__`
-    );
-
-    // ファイル名に日付を付ける
-    const now = new Date();
-    const d = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
-    const h = `${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
-
-    const blob = new Blob([updated], {type: 'text/html;charset=utf-8'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `タスク管理ダッシュボード_${d}_${h}.html`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    // 成功フラッシュ
-    btn.textContent = '✅ 保存しました';
-    btn.classList.add('flash');
-    setTimeout(() => {
-      btn.innerHTML = '💾 変更を保存する';
-      btn.classList.remove('flash');
-    }, 2000);
-  } catch(e) {
-    btn.textContent = '❌ 保存に失敗しました';
-    setTimeout(() => { btn.innerHTML = '💾 変更を保存する'; }, 2000);
-  }
 }
 
 // ══ RESET ════════════════════════════════════════════════════════
