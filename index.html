@@ -100,6 +100,11 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans
   color:var(--rd);background:var(--card);font-size:11px;font-weight:600;
   cursor:pointer;transition:all .18s}
 .rst-btn:hover{background:#FEE2E2}
+.save-btn{padding:5px 14px;border-radius:8px;border:none;
+  background:var(--n1);color:white;font-size:11px;font-weight:700;
+  cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:5px}
+.save-btn:hover{background:var(--nb)}
+.save-btn.flash{background:var(--gr)}
 .count-badge{display:inline-flex;align-items:center;justify-content:center;
   width:20px;height:20px;background:rgba(255,255,255,.2);
   border-radius:50%;font-size:10px;font-weight:700;margin-left:6px}
@@ -276,7 +281,8 @@ td:first-child{padding-left:10px}
       <option value="進行中">進行中</option>
       <option value="完了">完了</option>
     </select>
-    <button class="rst-btn ml-a" onclick="resetAll()">↺ 進捗をリセット</button>
+    <button class="save-btn ml-a" id="saveBtn" onclick="saveAsHtml()">💾 変更を保存する</button>
+    <button class="rst-btn" onclick="resetAll()">↺ リセット</button>
   </div>
 
   <!-- タスクテーブル -->
@@ -360,7 +366,7 @@ const TASKS = [
 
 // ══ STATE ═══════════════════════════════════════════════════════
 const SK = 'as_tasks_v2';
-let state = {};
+let state = {}; // __SAVED_STATE__
 try { state = JSON.parse(localStorage.getItem(SK)) || {}; } catch(e) {}
 
 function gs(id) {
@@ -678,6 +684,48 @@ function updateSummary() {
   }).join('');
 
   renderAlerts();
+}
+
+// ══ SAVE AS HTML ════════════════════════════════════════════════
+function saveAsHtml() {
+  const btn = document.getElementById('saveBtn');
+  try {
+    // outerHTML からページ全体を取得
+    const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+
+    // __SAVED_STATE__ マーカーの行を現在のstateで上書き
+    const stateJson = JSON.stringify(state);
+    const updated = html.replace(
+      /let state = .*; \/\/ __SAVED_STATE__/,
+      `let state = ${stateJson}; // __SAVED_STATE__`
+    );
+
+    // ファイル名に日付を付ける
+    const now = new Date();
+    const d = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+    const h = `${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+
+    const blob = new Blob([updated], {type: 'text/html;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `タスク管理ダッシュボード_${d}_${h}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    // 成功フラッシュ
+    btn.textContent = '✅ 保存しました';
+    btn.classList.add('flash');
+    setTimeout(() => {
+      btn.innerHTML = '💾 変更を保存する';
+      btn.classList.remove('flash');
+    }, 2000);
+  } catch(e) {
+    btn.textContent = '❌ 保存に失敗しました';
+    setTimeout(() => { btn.innerHTML = '💾 変更を保存する'; }, 2000);
+  }
 }
 
 // ══ RESET ════════════════════════════════════════════════════════
