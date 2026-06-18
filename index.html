@@ -100,6 +100,59 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans
   color:var(--rd);background:var(--card);font-size:11px;font-weight:600;
   cursor:pointer;transition:all .18s}
 .rst-btn:hover{background:#FEE2E2}
+
+/* ── TOOL BAR ── */
+.tool-bar{background:var(--card);border-radius:10px;padding:10px 16px;
+  margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.05);
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tb-btn{padding:6px 14px;border-radius:8px;border:1.5px solid;
+  font-size:11px;font-weight:700;cursor:pointer;transition:all .18s;
+  display:inline-flex;align-items:center;gap:5px;background:white}
+.pdf-btn{border-color:#7C3AED;color:#7C3AED}
+.pdf-btn:hover{background:#EDE9FE}
+.exp-btn{border-color:var(--og);color:var(--og)}
+.exp-btn:hover{background:var(--o2)}
+.imp-btn{border-color:var(--n1);color:var(--n1)}
+.imp-btn:hover{background:var(--n2)}
+.imp-file{display:none}
+.tb-status{font-size:11px;color:var(--txl);margin-left:4px}
+.print-only{display:none}
+
+/* ── PRINT ── */
+@media print{
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .hd{position:static!important;box-shadow:none;padding:12px 20px;
+    -webkit-print-color-adjust:exact}
+  .hd-l p{display:block!important;opacity:.8}
+  .ring-wrap{display:none!important}
+  .hd-stats{display:flex!important}
+  .hd-stat .n{font-size:16px}
+  .hd-stat .l{opacity:.7}
+  .ab,.fb,.tool-bar,.xb,.sbw .sb,.pw .pi,.pw .pct-lbl,
+  .pw .mb,.count-in,.count-bar-outer,.count-pct-lbl{display:none!important}
+  body{background:white;font-size:11px}
+  .main{padding:10px 0}
+  .sg{grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
+  .sc{padding:8px 10px;box-shadow:none;border:1px solid #E5E7EB}
+  .sc-pct{font-size:18px}
+  .tw{box-shadow:none;border:1px solid #D1D5DB;border-radius:6px}
+  table{font-size:10px}
+  thead th{font-size:9.5px;padding:6px 5px}
+  td{padding:5px 5px}
+  tbody tr.mr{break-inside:avoid}
+  tbody tr.dr{display:table-row!important}
+  tbody tr.mr:hover{background:transparent}
+  .dc{padding:4px 10px 6px}
+  .dl{margin-top:4px;font-size:8.5px}
+  .dv{font-size:10px}
+  .count-wrap{background:#EFF6FF;border:1px solid #BFDBFE;padding:3px 8px}
+  .memo-ta{border:none;background:transparent;padding:0;
+    min-height:auto;resize:none;overflow:visible;height:auto;font-size:10px}
+  .print-only{display:inline!important}
+  .sec-ttl{font-size:9px;margin-bottom:6px}
+  .bar,.bar-i{height:4px}
+  a{text-decoration:none}
+}
 .count-badge{display:inline-flex;align-items:center;justify-content:center;
   width:20px;height:20px;background:rgba(255,255,255,.2);
   border-radius:50%;font-size:10px;font-weight:700;margin-left:6px}
@@ -275,7 +328,17 @@ td:first-child{padding-left:10px}
       <option value="進行中">進行中</option>
       <option value="完了">完了</option>
     </select>
-    <button class="rst-btn ml-a" onclick="resetAll()">↺ 進捗をリセット</button>
+    <button class="rst-btn ml-a" onclick="resetAll()">↺ リセット</button>
+  </div>
+
+  <!-- ツールバー -->
+  <div class="tool-bar">
+    <button class="tb-btn pdf-btn" onclick="window.print()">🖨 PDF出力</button>
+    <span style="width:1px;height:20px;background:var(--bd);display:inline-block;margin:0 2px"></span>
+    <button class="tb-btn exp-btn" onclick="exportBackup()">📤 バックアップを取る</button>
+    <button class="tb-btn imp-btn" onclick="document.getElementById('impFile').click()">📥 バックアップから復元</button>
+    <input type="file" id="impFile" class="imp-file" accept=".json" onchange="importBackup(this)">
+    <span id="tbStatus" class="tb-status"></span>
   </div>
 
   <!-- タスクテーブル -->
@@ -516,11 +579,15 @@ function rowHtml(t) {
   [['未着手','s-ns'],['進行中','s-wip'],['完了','s-dn']].forEach(([st, cls]) => {
     h += `<button class="sb ${cls}${s.status===st?' act':''}" id="sb-${t.id}-${st}" onclick="setStatus(${t.id},'${st}')">${st}</button>`;
   });
+  const stBg    = s.status==='完了'?'#D1FAE5':s.status==='進行中'?'#FEF3C7':'#F3F4F6';
+  const stColor = s.status==='完了'?'#047857':s.status==='進行中'?'#B45309':'#6B7280';
+  h += `<span class="print-only" style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:${stBg};color:${stColor}">${s.status}</span>`;
   h += `</div></td>`;
   h += `<td><div class="pw">`;
   h += `<input class="pi" id="pi-${t.id}" type="number" min="0" max="100" value="${pct}" onchange="setProgress(${t.id},this.value)" oninput="setProgress(${t.id},this.value)">`;
   h += `<span class="pct-lbl">%</span>`;
   h += `<div class="mb"><div class="mb-i" id="mbi-${t.id}" style="width:${pct}%;background:${col}"></div></div>`;
+  h += `<span class="print-only" style="font-weight:800;font-size:12px;color:${col}">${pct}%</span>`;
   h += `</div></td></tr>`;
 
   // ── DETAIL ROW ──
@@ -649,6 +716,67 @@ function updateSummary() {
   }).join('');
 
   renderAlerts();
+}
+
+// ══ BACKUP / RESTORE / PDF ══════════════════════════════════════
+function fmtDate(d) {
+  return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}_${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+function showTbStatus(msg, color, ms) {
+  const el = document.getElementById('tbStatus');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.color = color || 'var(--txl)';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.textContent = ''; }, ms || 4000);
+}
+
+function exportBackup() {
+  const now = new Date();
+  const backup = {
+    version: SK,
+    exportedAt: now.toISOString(),
+    exportedAtJa: now.toLocaleString('ja-JP'),
+    state: state
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], {type: 'application/json;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `タスク進捗バックアップ_${fmtDate(now)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showTbStatus('📤 バックアップを保存しました', 'var(--og)');
+}
+
+function importBackup(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const backup = JSON.parse(e.target.result);
+      if (!backup.state || typeof backup.state !== 'object') throw new Error('invalid format');
+      const at = backup.exportedAtJa || backup.exportedAt || '日時不明';
+      const taskCount = Object.keys(backup.state).length;
+      if (!confirm(`【${at}】のバックアップを復元しますか？\n（${taskCount}件のタスクデータ）\n\n現在の進捗・メモは上書きされます。`)) {
+        input.value = '';
+        return;
+      }
+      state = backup.state;
+      try { localStorage.setItem(SK, JSON.stringify(state)); } catch(e) {}
+      renderTable();
+      updateSummary();
+      showTbStatus(`✅ ${at} のデータを復元しました`, 'var(--n1)', 5000);
+    } catch(err) {
+      alert('バックアップファイルの読み込みに失敗しました。\n正しいJSONファイルか確認してください。');
+    }
+    input.value = '';
+  };
+  reader.readAsText(file, 'utf-8');
 }
 
 // ══ RESET ════════════════════════════════════════════════════════
