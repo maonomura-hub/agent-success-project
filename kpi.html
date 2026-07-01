@@ -15,20 +15,31 @@ body{font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans
   background:var(--bg);color:var(--tx);min-height:100vh;font-size:13px}
 
 /* HEADER */
-.hd{background:var(--navy);color:var(--txw);padding:14px 24px;
+.hd{background:var(--navy);color:var(--txw);padding:10px 24px;
   display:flex;align-items:center;justify-content:space-between;
   position:sticky;top:0;z-index:200;box-shadow:0 2px 12px rgba(0,0,0,.3)}
 .hd h1{font-size:15px;font-weight:800;letter-spacing:.02em}
 .hd h1 span{font-weight:400;opacity:.65;font-size:12px;margin-left:8px}
-.hd-nav{display:flex;gap:8px}
+.hd-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.hd-nav{display:flex;gap:6px}
 .hd-nav a{color:rgba(255,255,255,.75);text-decoration:none;font-size:11px;
   padding:5px 10px;border-radius:4px;border:1px solid rgba(255,255,255,.2);
   transition:.2s}
 .hd-nav a:hover,.hd-nav a.active{background:rgba(255,255,255,.18);color:#fff}
+.hd-btn{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.3);
+  border-radius:5px;padding:5px 11px;font-size:11px;font-weight:700;cursor:pointer;
+  transition:.2s;white-space:nowrap}
+.hd-btn:hover{background:rgba(255,255,255,.25)}
+.hd-btn.pdf{background:rgba(220,53,69,.7);border-color:rgba(220,53,69,.9)}
+.hd-btn.pdf:hover{background:rgba(220,53,69,.9)}
+.hd-btn.backup{background:rgba(29,122,74,.7);border-color:rgba(29,122,74,.9)}
+.hd-btn.backup:hover{background:rgba(29,122,74,.9)}
+.hd-btn.restore{background:rgba(33,111,187,.5);border-color:rgba(33,111,187,.8)}
+.hd-btn.restore:hover{background:rgba(33,111,187,.8)}
 
 /* TABS */
 .tab-bar{background:#fff;border-bottom:2px solid var(--border);
-  display:flex;gap:0;overflow-x:auto;padding:0 20px;sticky;top:56px;z-index:100}
+  display:flex;gap:0;overflow-x:auto;padding:0 20px;position:sticky;top:52px;z-index:100}
 .tab-btn{padding:12px 18px;border:none;background:none;cursor:pointer;
   font-size:12px;font-weight:600;color:var(--txg);border-bottom:3px solid transparent;
   white-space:nowrap;transition:.2s;margin-bottom:-2px}
@@ -153,11 +164,86 @@ td.num{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
   padding:1px;color:var(--tx)}
 .monthly-input:focus{outline:none;border-bottom-color:var(--accent)}
 
+/* CSV UPLOAD AREA */
+.csv-upload-area{display:flex;align-items:center;gap:10px;margin-bottom:12px;
+  background:var(--lt-navy);border-radius:8px;padding:10px 14px}
+.csv-upload-area p{font-size:11px;color:var(--txg);margin:0}
+.btn-sm{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;
+  border-radius:5px;border:none;cursor:pointer;font-size:11px;font-weight:700;
+  font-family:inherit;transition:.2s}
+.btn-sm.blue{background:var(--accent);color:#fff}
+.btn-sm.blue:hover{background:#1a5fa0}
+.btn-sm.green{background:var(--green);color:#fff}
+.btn-sm.green:hover{background:#166038}
+.btn-sm.red{background:var(--red);color:#fff}
+.btn-sm.red:hover{background:#8b001a}
+.btn-sm.gray{background:#6B7280;color:#fff}
+.btn-sm.gray:hover{background:#4B5563}
+
+/* YT ADD ROW FORM */
+.yt-add-form{background:var(--lt-navy);border-radius:8px;padding:14px 16px;margin-top:12px;
+  display:grid;grid-template-columns:1fr 120px 110px 110px 1fr auto;gap:8px;align-items:end}
+.yt-add-form label{font-size:10px;color:var(--txg);font-weight:600;display:block;margin-bottom:3px}
+.yt-add-form input,.yt-add-form select{
+  width:100%;padding:5px 7px;border:1px solid var(--border);border-radius:4px;
+  font-size:11px;font-family:inherit;background:#fff;color:var(--tx)}
+.yt-add-form input:focus,.yt-add-form select:focus{outline:none;border-color:var(--accent)}
+
+/* MEMO PANEL */
+.memo-toggle{position:fixed;bottom:24px;left:24px;z-index:998;
+  background:var(--navy);color:#fff;border:none;border-radius:50%;
+  width:44px;height:44px;font-size:18px;cursor:pointer;
+  box-shadow:0 3px 12px rgba(0,0,0,.3);transition:.2s;display:flex;align-items:center;justify-content:center}
+.memo-toggle:hover{background:var(--accent);transform:scale(1.08)}
+.memo-panel{position:fixed;bottom:78px;left:24px;z-index:997;
+  width:320px;background:#fff;border-radius:12px;
+  box-shadow:0 8px 32px rgba(0,0,0,.2);padding:0;
+  display:none;flex-direction:column;overflow:hidden;
+  border:1px solid var(--border)}
+.memo-panel.open{display:flex}
+.memo-header{background:var(--navy);color:#fff;padding:10px 14px;
+  font-size:12px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.memo-header button{background:none;border:none;color:rgba(255,255,255,.7);
+  cursor:pointer;font-size:14px;padding:0 4px;line-height:1}
+.memo-header button:hover{color:#fff}
+.memo-body{padding:12px}
+.memo-body textarea{width:100%;height:200px;border:1px solid var(--border);border-radius:6px;
+  padding:8px 10px;font-size:12px;font-family:inherit;color:var(--tx);
+  resize:vertical;line-height:1.6}
+.memo-body textarea:focus{outline:none;border-color:var(--accent)}
+.memo-footer{padding:0 12px 10px;font-size:10px;color:var(--txg)}
+
+/* DELETE BTN */
+.del-btn{background:none;border:none;color:var(--red);cursor:pointer;font-size:13px;
+  padding:2px 4px;border-radius:3px;transition:.15s}
+.del-btn:hover{background:var(--lt-red)}
+
 /* RESP */
 @media(max-width:768px){
   .persona-grid{grid-template-columns:1fr}
   .webinar-card{grid-template-columns:1fr;gap:8px}
   .tab-btn{padding:10px 12px;font-size:11px}
+  .yt-add-form{grid-template-columns:1fr 1fr}
+  .hd-right{gap:4px}
+}
+
+/* ── PRINT STYLES ── */
+@media print{
+  .hd-btn,.memo-toggle,.memo-panel,.save-notice,.tab-bar,
+  .hd-nav,.csv-upload-area,.yt-add-form,.del-btn,
+  input[type="file"],button{display:none!important}
+  .hd{position:static;box-shadow:none;padding:10px 16px}
+  .tab-panel{display:block!important;padding:12px 0;page-break-after:always}
+  .tab-panel:last-child{page-break-after:avoid}
+  body{background:#fff;font-size:11px}
+  .card{box-shadow:none;border:1px solid #ccc;break-inside:avoid}
+  .kpi-card{box-shadow:none;border:1px solid #ccc;break-inside:avoid}
+  thead th{background:#1A355E!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .badge,.prog-bar{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .persona-grid{grid-template-columns:1fr!important}
+  .webinar-card{grid-template-columns:80px 1fr auto!important}
+  select,.editable,.monthly-input{border:1px solid #ccc!important;background:#fff!important}
+  .memo-panel{display:none!important}
 }
 </style>
 </head>
@@ -167,11 +253,19 @@ td.num{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
   <div>
     <h1>AGENT SUCCESS <span>KPI管理ボード</span></h1>
   </div>
-  <nav class="hd-nav">
-    <a href="index.html">タスク管理</a>
-    <a href="kpi.html" class="active">KPI管理</a>
-  </nav>
+  <div class="hd-right">
+    <button class="hd-btn pdf" onclick="printPDF()">🖨️ PDF出力</button>
+    <button class="hd-btn backup" onclick="exportBackup()">💾 バックアップ</button>
+    <button class="hd-btn restore" onclick="triggerRestore()">📂 復元</button>
+    <nav class="hd-nav">
+      <a href="index.html">タスク管理</a>
+      <a href="kpi.html" class="active">KPI管理</a>
+    </nav>
+  </div>
 </header>
+
+<input type="file" id="restore-file-input" accept=".json" style="display:none" onchange="handleRestore(event)">
+<input type="file" id="csv-file-input" accept=".csv,text/csv" style="display:none" onchange="handleCSVUpload(event)">
 
 <div class="tab-bar">
   <button class="tab-btn active" onclick="switchTab('dashboard',this)">📊 ダッシュボード</button>
@@ -200,10 +294,10 @@ td.num{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
     </div>
     <div class="kpi-card orange">
       <div class="kpi-label">事例コンテンツ</div>
-      <div class="kpi-val orange">4 <span style="font-size:14px">/ 20件</span></div>
-      <div class="kpi-sub">あと16件で目標達成</div>
+      <div class="kpi-val orange" id="kpi-case-val">4 <span style="font-size:14px">/ 20件</span></div>
+      <div class="kpi-sub" id="kpi-case-sub">あと16件で目標達成</div>
       <div class="prog-wrap" style="margin-top:8px">
-        <div class="prog-bar orange" style="width:20%"></div>
+        <div class="prog-bar orange" id="kpi-case-prog" style="width:20%"></div>
       </div>
     </div>
     <div class="kpi-card">
@@ -386,6 +480,13 @@ td.num{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
 
   <div class="card">
     <div class="card-title">月次モニタリング（チャネル別商談実施件数）</div>
+    <div class="csv-upload-area">
+      <div style="flex:1">
+        <p><strong style="color:var(--accent)">📊 CSVインポート</strong>　チャンネル名・各月の件数が入ったCSVをアップロードするとテーブルに反映されます。</p>
+        <p style="margin-top:3px">形式例：<code style="background:#fff;padding:1px 5px;border-radius:3px;font-size:10px">チャネル,6月,7月,8月,9月,10月,11月,12月</code></p>
+      </div>
+      <button class="btn-sm blue" onclick="triggerCSVUpload()">📂 CSVを選択</button>
+    </div>
     <div class="tbl-wrap">
     <table id="monthly-table">
       <thead><tr>
@@ -446,9 +547,42 @@ td.num{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
         <th style="min-width:90px">収録予定日</th>
         <th style="min-width:90px">公開予定日</th>
         <th style="min-width:180px">備考・アクション</th>
+        <th style="width:36px"></th>
       </tr></thead>
       <tbody id="yt-tbody"></tbody>
     </table>
+    </div>
+
+    <!-- ADD ROW FORM -->
+    <div class="yt-add-form" id="yt-add-form">
+      <div>
+        <label>チャンネル名</label>
+        <input id="yt-new-name" placeholder="例：〇〇チャンネル（登録者数）">
+      </div>
+      <div>
+        <label>ステータス</label>
+        <select id="yt-new-status">
+          <option value="confirmed">✅ 確定</option>
+          <option value="pending">🔄 打診中</option>
+          <option value="new" selected>📌 未打診</option>
+          <option value="target">🎯 希望枠</option>
+        </select>
+      </div>
+      <div>
+        <label>収録予定日</label>
+        <input id="yt-new-rec" placeholder="未定">
+      </div>
+      <div>
+        <label>公開予定日</label>
+        <input id="yt-new-pub" placeholder="未定">
+      </div>
+      <div>
+        <label>備考・アクション</label>
+        <input id="yt-new-note" placeholder="メモ...">
+      </div>
+      <div style="padding-top:16px">
+        <button class="btn-sm green" onclick="addYTRow()">＋ 追加</button>
+      </div>
     </div>
   </div>
 </div>
@@ -461,9 +595,9 @@ td.num{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
   <div class="card">
     <div class="card-title">事例コンテンツ進捗（目標：4件 → 20件）</div>
     <div style="display:flex;align-items:center;gap:16px;margin-bottom:14px">
-      <div style="font-size:28px;font-weight:900;color:var(--orange)">4 <span style="font-size:14px;color:var(--txg)">/ 20件</span></div>
+      <div style="font-size:28px;font-weight:900;color:var(--orange)" id="case-count-display">4 <span style="font-size:14px;color:var(--txg)">/ 20件</span></div>
       <div style="flex:1">
-        <div style="font-size:10px;color:var(--txg);margin-bottom:4px">達成率 20%</div>
+        <div style="font-size:10px;color:var(--txg);margin-bottom:4px" id="case-rate-display">達成率 20%</div>
         <div class="prog-wrap"><div class="prog-bar orange" style="width:20%" id="case-prog"></div></div>
       </div>
     </div>
@@ -636,10 +770,26 @@ td.num{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
   </div>
 </div>
 
+<!-- SAVE NOTICE -->
 <div class="save-notice" id="save-notice">✓ 保存しました</div>
 
+<!-- MEMO PANEL -->
+<button class="memo-toggle" onclick="toggleMemo()" title="メモを開く">📝</button>
+<div class="memo-panel" id="memo-panel">
+  <div class="memo-header">
+    <span>📝 メモ帳</span>
+    <button onclick="toggleMemo()" title="閉じる">✕</button>
+  </div>
+  <div class="memo-body">
+    <textarea id="memo-textarea" placeholder="今やっているタスクや気づきを自由に書き込めます。リロードしても保存されます。"></textarea>
+  </div>
+  <div class="memo-footer">自動保存 ✓ — リロード後も保持されます</div>
+</div>
+
 <script>
-// ── TAB SWITCH ──
+// ═══════════════════════════════════════════
+// TAB SWITCH
+// ═══════════════════════════════════════════
 function switchTab(id, btn) {
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -647,7 +797,9 @@ function switchTab(id, btn) {
   btn.classList.add('active');
 }
 
-// ── SAVE / LOAD ──
+// ═══════════════════════════════════════════
+// SAVE / LOAD (LocalStorage)
+// ═══════════════════════════════════════════
 function save(key, val) {
   localStorage.setItem('as_kpi_' + key, JSON.stringify(val));
   const n = document.getElementById('save-notice');
@@ -660,7 +812,78 @@ function load(key, def) {
   return v ? JSON.parse(v) : def;
 }
 
-// ── CHANNEL BARS ──
+// ═══════════════════════════════════════════
+// PDF PRINT
+// ═══════════════════════════════════════════
+function printPDF() {
+  window.print();
+}
+
+// ═══════════════════════════════════════════
+// BACKUP / RESTORE
+// ═══════════════════════════════════════════
+function exportBackup() {
+  const keys = ['monthly','yt','yt_extra','cases','shorts','webinars','memo'];
+  const backup = { _version: 1, _date: new Date().toISOString() };
+  keys.forEach(k => {
+    const v = localStorage.getItem('as_kpi_' + k);
+    if (v) backup[k] = JSON.parse(v);
+  });
+  const blob = new Blob([JSON.stringify(backup, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'agent_success_kpi_backup_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function triggerRestore() {
+  if (!confirm('バックアップファイルから復元しますか？\n現在のデータは上書きされます。')) return;
+  document.getElementById('restore-file-input').click();
+}
+
+function handleRestore(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      const keys = ['monthly','yt','yt_extra','cases','shorts','webinars','memo'];
+      keys.forEach(k => {
+        if (data[k] !== undefined) {
+          localStorage.setItem('as_kpi_' + k, JSON.stringify(data[k]));
+        }
+      });
+      alert('復元が完了しました。ページを再読み込みします。');
+      location.reload();
+    } catch(err) {
+      alert('ファイルの読み込みに失敗しました。正しいバックアップJSONか確認してください。');
+    }
+  };
+  reader.readAsText(file, 'UTF-8');
+  event.target.value = '';
+}
+
+// ═══════════════════════════════════════════
+// MEMO
+// ═══════════════════════════════════════════
+function toggleMemo() {
+  const panel = document.getElementById('memo-panel');
+  panel.classList.toggle('open');
+}
+function initMemo() {
+  const ta = document.getElementById('memo-textarea');
+  ta.value = load('memo', '');
+  ta.addEventListener('input', () => {
+    localStorage.setItem('as_kpi_memo', JSON.stringify(ta.value));
+  });
+}
+
+// ═══════════════════════════════════════════
+// CHANNEL BARS
+// ═══════════════════════════════════════════
 const channelData = [
   {name:'リファラル',    meetings:36, orders:12, rate:33.3, color:'#1D7A4A'},
   {name:'交流会',       meetings:26, orders:8,  rate:30.8, color:'#1D7A4A'},
@@ -671,7 +894,6 @@ const channelData = [
   {name:'セミナー',    meetings:20, orders:1,  rate:5.0,  color:'#B00020'},
   {name:'オンリーストーリー', meetings:17, orders:1, rate:5.9, color:'#B00020'},
 ];
-
 function renderBars() {
   const wrap = document.getElementById('channel-bars');
   const maxM = Math.max(...channelData.map(d => d.meetings));
@@ -688,7 +910,9 @@ function renderBars() {
   `).join('');
 }
 
-// ── MONTHLY TABLE ──
+// ═══════════════════════════════════════════
+// MONTHLY TABLE + CSV UPLOAD
+// ═══════════════════════════════════════════
 const channels = ['リファラル','交流会','YouTube','お問い合わせ','書籍','SNS','セミナー'];
 const months = ['6月','7月','8月','9月','10月','11月','12月'];
 
@@ -727,7 +951,61 @@ function updateTotals(data) {
   });
 }
 
-// ── YOUTUBE COLLAB ──
+// CSV Upload
+function triggerCSVUpload() {
+  document.getElementById('csv-file-input').click();
+}
+function handleCSVUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    parseAndLoadCSV(e.target.result);
+  };
+  reader.readAsText(file, 'UTF-8');
+  event.target.value = '';
+}
+function parseCSVLine(line) {
+  const result = [];
+  let field = '', inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') { inQuotes = !inQuotes; }
+    else if (c === ',' && !inQuotes) { result.push(field.trim()); field = ''; }
+    else { field += c; }
+  }
+  result.push(field.trim());
+  return result;
+}
+function parseAndLoadCSV(text) {
+  const lines = text.trim().split(/\r?\n/);
+  if (lines.length < 2) { alert('CSVにデータが見つかりません。'); return; }
+  const data = load('monthly', {});
+  let matched = 0;
+  for (let li = 1; li < lines.length; li++) {
+    if (!lines[li].trim()) continue;
+    const cols = parseCSVLine(lines[li]);
+    const chName = cols[0];
+    const ci = channels.indexOf(chName);
+    if (ci === -1) continue;
+    matched++;
+    for (let mi = 0; mi < months.length; mi++) {
+      const val = (cols[mi + 1] || '').replace(/[^0-9]/g, '');
+      if (val !== '') data[`${ci}_${mi}`] = val;
+    }
+  }
+  if (matched === 0) {
+    alert('一致するチャンネル名が見つかりませんでした。\n1列目がチャネル名（例：リファラル）になっているか確認してください。');
+    return;
+  }
+  save('monthly', data);
+  renderMonthly();
+  alert(`CSVデータを取り込みました（${matched}チャネル）`);
+}
+
+// ═══════════════════════════════════════════
+// YOUTUBE COLLAB
+// ═══════════════════════════════════════════
 const ytData = [
   {name:'高野さん（Key Players）', handle:'@keyplayers', status:'confirmed'},
   {name:'HRmarker', handle:'@HRMAKERryoma', status:'confirmed'},
@@ -757,22 +1035,59 @@ const statusLabel = {
 
 function renderYT() {
   const saved = load('yt', {});
+  const extra = load('yt_extra', []);
   const tb = document.getElementById('yt-tbody');
-  tb.innerHTML = ytData.map((d, i) => {
-    const rec = saved[`rec_${i}`] || '';
-    const pub = saved[`pub_${i}`] || '';
+
+  // Fixed rows
+  const fixedRows = ytData.map((d, i) => {
+    const rec  = saved[`rec_${i}`]  || '';
+    const pub  = saved[`pub_${i}`]  || '';
     const note = saved[`note_${i}`] || d.note || '';
+    const status = saved[`status_${i}`] || d.status;
     return `<tr>
       <td><strong>${d.name}</strong><br><span style="font-size:10px;color:var(--txg)">${d.handle}</span></td>
-      <td class="center">${statusLabel[d.status]}</td>
+      <td class="center">
+        <select onchange="saveYT('status_${i}',this.value)" style="font-size:10px;border:1px solid var(--border);border-radius:4px;padding:2px 4px">
+          <option value="confirmed" ${status==='confirmed'?'selected':''}>✅ 確定</option>
+          <option value="pending"   ${status==='pending'  ?'selected':''}>🔄 打診中</option>
+          <option value="new"       ${status==='new'      ?'selected':''}>📌 未打診</option>
+          <option value="target"    ${status==='target'   ?'selected':''}>🎯 希望枠</option>
+        </select>
+      </td>
       <td class="center"><input class="editable" value="${rec}" placeholder="未定"
         onchange="saveYT('rec_${i}',this.value)" style="text-align:center"></td>
       <td class="center"><input class="editable" value="${pub}" placeholder="未定"
         onchange="saveYT('pub_${i}',this.value)" style="text-align:center"></td>
       <td><input class="editable" value="${note}" placeholder="メモ..."
         onchange="saveYT('note_${i}',this.value)"></td>
+      <td></td>
     </tr>`;
   }).join('');
+
+  // Extra (user-added) rows
+  const extraRows = extra.map((d, i) => {
+    return `<tr style="background:var(--lt-green)">
+      <td><input class="editable" value="${d.name||''}" placeholder="チャンネル名"
+        onchange="saveYTExtra(${i},'name',this.value)"></td>
+      <td class="center">
+        <select onchange="saveYTExtra(${i},'status',this.value)" style="font-size:10px;border:1px solid var(--border);border-radius:4px;padding:2px 4px">
+          <option value="confirmed" ${(d.status||'')==='confirmed'?'selected':''}>✅ 確定</option>
+          <option value="pending"   ${(d.status||'')==='pending'  ?'selected':''}>🔄 打診中</option>
+          <option value="new"       ${(d.status||'')==='new'      ?'selected':''}>📌 未打診</option>
+          <option value="target"    ${(d.status||'')==='target'   ?'selected':''}>🎯 希望枠</option>
+        </select>
+      </td>
+      <td class="center"><input class="editable" value="${d.rec||''}" placeholder="未定"
+        onchange="saveYTExtra(${i},'rec',this.value)" style="text-align:center"></td>
+      <td class="center"><input class="editable" value="${d.pub||''}" placeholder="未定"
+        onchange="saveYTExtra(${i},'pub',this.value)" style="text-align:center"></td>
+      <td><input class="editable" value="${d.note||''}" placeholder="メモ..."
+        onchange="saveYTExtra(${i},'note',this.value)"></td>
+      <td class="center"><button class="del-btn" onclick="deleteYTExtra(${i})" title="削除">🗑️</button></td>
+    </tr>`;
+  }).join('');
+
+  tb.innerHTML = fixedRows + extraRows;
 }
 
 function saveYT(key, val) {
@@ -781,25 +1096,82 @@ function saveYT(key, val) {
   save('yt', data);
 }
 
-// ── CASE STUDY ──
+function saveYTExtra(i, field, val) {
+  const extra = load('yt_extra', []);
+  if (!extra[i]) extra[i] = {};
+  extra[i][field] = val;
+  save('yt_extra', extra);
+}
+
+function deleteYTExtra(i) {
+  if (!confirm('このコラボ先を削除しますか？')) return;
+  const extra = load('yt_extra', []);
+  extra.splice(i, 1);
+  save('yt_extra', extra);
+  renderYT();
+}
+
+function addYTRow() {
+  const name   = document.getElementById('yt-new-name').value.trim();
+  const status = document.getElementById('yt-new-status').value;
+  const rec    = document.getElementById('yt-new-rec').value.trim();
+  const pub    = document.getElementById('yt-new-pub').value.trim();
+  const note   = document.getElementById('yt-new-note').value.trim();
+  if (!name) { alert('チャンネル名を入力してください'); return; }
+  const extra = load('yt_extra', []);
+  extra.push({ name, status, rec, pub, note });
+  save('yt_extra', extra);
+  // clear form
+  document.getElementById('yt-new-name').value = '';
+  document.getElementById('yt-new-rec').value  = '';
+  document.getElementById('yt-new-pub').value  = '';
+  document.getElementById('yt-new-note').value = '';
+  document.getElementById('yt-new-status').value = 'new';
+  renderYT();
+}
+
+// ═══════════════════════════════════════════
+// CASE STUDY (with KPI sync)
+// ═══════════════════════════════════════════
 const caseData = [
   {title:'Najico tech（建設・空調業の立ち上げ事例）', persona:'①採用立ち上げ', status:'published'},
   {title:'大場建設（月商600万超の立ち上げ事例）', persona:'①採用立ち上げ', status:'published'},
   {title:'ウィルオブ・ワーク（大手の立て直し事例）', persona:'③拡大立て直し', status:'published'},
   {title:'8thColor（未経験3ヶ月で初成約200万の事例）', persona:'②新規立ち上げ', status:'published'},
-  ...Array.from({length:16},(_,i)=>({title:`（事例${i+5}：取材調整中）`,persona:['①採用立ち上げ','②新規立ち上げ','③拡大立て直し'][i%3],status:'todo'})),
+  ...Array.from({length:16},(_,i)=>({
+    title:`（事例${i+5}：取材調整中）`,
+    persona:['①採用立ち上げ','②新規立ち上げ','③拡大立て直し'][i%3],
+    status:'todo'
+  })),
 ];
 
-const caseStatusBadge = {
-  published: '<span class="badge badge-green">✅ 公開済み</span>',
-  wip:       '<span class="badge badge-orange">🔄 制作中</span>',
-  todo:      '<span class="badge badge-gray">📌 未着手</span>',
-};
 const personaBadge = {
   '①採用立ち上げ':'<span class="badge badge-green">①</span>',
   '②新規立ち上げ':'<span class="badge badge-blue">②</span>',
   '③拡大立て直し':'<span class="badge badge-orange">③</span>',
 };
+
+function updateCaseKPI(pubCount) {
+  const total = 20;
+  const pct = Math.round(pubCount / total * 100);
+  const remaining = Math.max(0, total - pubCount);
+
+  // Content tab
+  const cntDisplay = document.getElementById('case-count-display');
+  if (cntDisplay) cntDisplay.innerHTML = `${pubCount} <span style="font-size:14px;color:var(--txg)">/ ${total}件</span>`;
+  const rateDisplay = document.getElementById('case-rate-display');
+  if (rateDisplay) rateDisplay.textContent = `達成率 ${pct}%`;
+  const prog = document.getElementById('case-prog');
+  if (prog) prog.style.width = pct + '%';
+
+  // Dashboard KPI card
+  const kpiVal = document.getElementById('kpi-case-val');
+  if (kpiVal) kpiVal.innerHTML = `${pubCount} <span style="font-size:14px">/ ${total}件</span>`;
+  const kpiSub = document.getElementById('kpi-case-sub');
+  if (kpiSub) kpiSub.textContent = remaining > 0 ? `あと${remaining}件で目標達成` : '🎉 目標達成！';
+  const kpiProg = document.getElementById('kpi-case-prog');
+  if (kpiProg) kpiProg.style.width = pct + '%';
+}
 
 function renderCases() {
   const saved = load('cases', {});
@@ -807,9 +1179,9 @@ function renderCases() {
   let pubCount = 0;
   tb.innerHTML = caseData.map((d, i) => {
     const status = saved[`status_${i}`] || d.status;
-    const date1 = saved[`date1_${i}`] || '';
-    const date2 = saved[`date2_${i}`] || '';
-    const note = saved[`note_${i}`] || '';
+    const date1  = saved[`date1_${i}`]  || '';
+    const date2  = saved[`date2_${i}`]  || '';
+    const note   = saved[`note_${i}`]   || '';
     if (status === 'published') pubCount++;
     const bg = status === 'published' ? 'background:var(--lt-green)' : '';
     return `<tr style="${bg}">
@@ -819,7 +1191,7 @@ function renderCases() {
       <td class="center">
         <select onchange="saveCase('status_${i}',this.value)" style="font-size:11px;border:1px solid var(--border);border-radius:4px;padding:2px 4px">
           <option value="todo" ${status==='todo'?'selected':''}>📌 未着手</option>
-          <option value="wip" ${status==='wip'?'selected':''}>🔄 制作中</option>
+          <option value="wip"  ${status==='wip' ?'selected':''}>🔄 制作中</option>
           <option value="published" ${status==='published'?'selected':''}>✅ 公開済み</option>
         </select>
       </td>
@@ -831,8 +1203,7 @@ function renderCases() {
         onchange="saveCase('note_${i}',this.value)"></td>
     </tr>`;
   }).join('');
-  const pct = Math.round(pubCount / 20 * 100);
-  document.getElementById('case-prog').style.width = pct + '%';
+  updateCaseKPI(pubCount);
 }
 
 function saveCase(key, val) {
@@ -842,7 +1213,9 @@ function saveCase(key, val) {
   if (key.startsWith('status_')) renderCases();
 }
 
-// ── SHORT VIDEOS ──
+// ═══════════════════════════════════════════
+// SHORT VIDEOS
+// ═══════════════════════════════════════════
 function renderShorts() {
   const saved = load('shorts', {});
   const tb = document.getElementById('short-tbody');
@@ -850,54 +1223,42 @@ function renderShorts() {
     const title = saved[`title_${i}`] || '';
     const count = saved[`count_${i}`] || '';
     const tiktok = saved[`tiktok_${i}`] || '';
-    const ig = saved[`ig_${i}`] || '';
-    const yt = saved[`yt_${i}`] || '';
-    const note = saved[`note_${i}`] || '';
+    const ig     = saved[`ig_${i}`]    || '';
+    const yt     = saved[`yt_${i}`]    || '';
+    const note   = saved[`note_${i}`]  || '';
     const bg = i%2===0 ? 'background:#FAFBFD' : '';
+    const sel = (id, val) => `<select onchange="saveShort('${id}_${i}',this.value)" style="font-size:10px;border:1px solid var(--border);border-radius:3px;padding:1px 3px">
+      <option value="" ${!val?'selected':''}>-</option>
+      <option value="done" ${val==='done'?'selected':''}>✅</option>
+      <option value="wip"  ${val==='wip' ?'selected':''}>🔄</option>
+    </select>`;
     return `<tr style="${bg}">
       <td><input class="editable" value="${title}" placeholder="元動画タイトル"
         onchange="saveShort('title_${i}',this.value)"></td>
       <td class="center"><input class="monthly-input" value="${count}" placeholder="0"
         onchange="saveShort('count_${i}',this.value)"></td>
-      <td class="center">
-        <select onchange="saveShort('tiktok_${i}',this.value)" style="font-size:10px;border:1px solid var(--border);border-radius:3px;padding:1px 3px">
-          <option value="" ${!tiktok?'selected':''}>-</option>
-          <option value="done" ${tiktok==='done'?'selected':''}>✅</option>
-          <option value="wip" ${tiktok==='wip'?'selected':''}>🔄</option>
-        </select>
-      </td>
-      <td class="center">
-        <select onchange="saveShort('ig_${i}',this.value)" style="font-size:10px;border:1px solid var(--border);border-radius:3px;padding:1px 3px">
-          <option value="" ${!ig?'selected':''}>-</option>
-          <option value="done" ${ig==='done'?'selected':''}>✅</option>
-          <option value="wip" ${ig==='wip'?'selected':''}>🔄</option>
-        </select>
-      </td>
-      <td class="center">
-        <select onchange="saveShort('yt_${i}',this.value)" style="font-size:10px;border:1px solid var(--border);border-radius:3px;padding:1px 3px">
-          <option value="" ${!yt?'selected':''}>-</option>
-          <option value="done" ${yt==='done'?'selected':''}>✅</option>
-          <option value="wip" ${yt==='wip'?'selected':''}>🔄</option>
-        </select>
-      </td>
+      <td class="center">${sel('tiktok', tiktok)}</td>
+      <td class="center">${sel('ig', ig)}</td>
+      <td class="center">${sel('yt', yt)}</td>
       <td><input class="editable" value="${note}" placeholder="メモ..."
         onchange="saveShort('note_${i}',this.value)"></td>
     </tr>`;
   }).join('');
 }
-
 function saveShort(key, val) {
   const data = load('shorts', {});
   data[key] = val;
   save('shorts', data);
 }
 
-// ── WEBINAR ──
+// ═══════════════════════════════════════════
+// WEBINAR
+// ═══════════════════════════════════════════
 const webinarData = [
-  {date:'2026/07/08', month:'7月', day:'8', name:'人材紹介立ち上げ×RYOMA共催', partner:'RYOMA', target:30},
+  {date:'2026/07/08', month:'7月', day:'8',  name:'人材紹介立ち上げ×RYOMA共催', partner:'RYOMA', target:30},
   {date:'2026/07/23', month:'7月', day:'23', name:'採用コスト削減×ポテンシャライト共催', partner:'ポテンシャライト', target:30},
-  {date:'2026/08/04', month:'8月', day:'4', name:'人材業界DX×ポーターズ共催', partner:'ポーターズ', target:25},
-  {date:'2026/08/06', month:'8月', day:'6', name:'人材紹介×ROXX共催', partner:'ROXX', target:25},
+  {date:'2026/08/04', month:'8月', day:'4',  name:'人材業界DX×ポーターズ共催', partner:'ポーターズ', target:25},
+  {date:'2026/08/06', month:'8月', day:'6',  name:'人材紹介×ROXX共催', partner:'ROXX', target:25},
 ];
 
 function renderWebinars() {
@@ -905,8 +1266,8 @@ function renderWebinars() {
   const wrap = document.getElementById('webinar-list');
   wrap.innerHTML = webinarData.map((d, i) => {
     const actual = saved[`actual_${i}`] || '';
-    const conv = saved[`conv_${i}`] || '';
-    const note = saved[`note_${i}`] || '';
+    const conv   = saved[`conv_${i}`]   || '';
+    const note   = saved[`note_${i}`]   || '';
     return `<div class="card webinar-card">
       <div class="date">
         <div style="font-size:10px">${d.month}</div>
@@ -929,18 +1290,18 @@ function renderWebinars() {
         </div>
       </div>
       <div class="webinar-meta">
-        ${actual ? `<div style="font-size:18px;font-weight:800;color:var(--green)">${actual}名</div>
-        <div style="font-size:10px">実績参加</div>` : '<div style="color:var(--txg);font-size:11px">未開催</div>'}
+        ${actual
+          ? `<div style="font-size:18px;font-weight:800;color:var(--green)">${actual}名</div><div style="font-size:10px">実績参加</div>`
+          : '<div style="color:var(--txg);font-size:11px">未開催</div>'}
       </div>
     </div>`;
   }).join('');
 
-  // extra rows
   const etb = document.getElementById('webinar-extra');
   etb.innerHTML = Array.from({length:4},(_,i) => {
-    const k = `extra_${i}`;
+    const k  = `extra_${i}`;
     const sv = saved[k] || {};
-    const bg = i%2===0?'background:#FAFBFD':'';
+    const bg = i%2===0 ? 'background:#FAFBFD' : '';
     return `<tr style="${bg}">
       <td><input class="editable" value="${sv.date||''}" placeholder="例：2026/09/10" onchange="saveWebinarExtra(${i},'date',this.value)"></td>
       <td><input class="editable" value="${sv.name||''}" placeholder="ウェビナー名" onchange="saveWebinarExtra(${i},'name',this.value)"></td>
@@ -966,13 +1327,16 @@ function saveWebinarExtra(i, field, val) {
   save('webinars', data);
 }
 
-// ── INIT ──
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
 renderBars();
 renderMonthly();
 renderYT();
 renderCases();
 renderShorts();
 renderWebinars();
+initMemo();
 </script>
 </body>
 </html>
