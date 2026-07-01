@@ -227,6 +227,36 @@ td.num{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
   .hd-right{gap:4px}
 }
 
+/* DATE INPUT */
+.date-input{border:1px solid var(--border);border-radius:4px;font-size:11px;
+  font-family:inherit;padding:3px 5px;background:#fff;color:var(--tx);
+  width:auto;max-width:130px;cursor:pointer}
+.date-input:focus{outline:none;border-color:var(--accent);background:var(--lt-navy)}
+
+/* SCHEDULE TIMELINE */
+.schedule-item{display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--border);
+  align-items:flex-start;font-size:12px}
+.schedule-item:last-child{border-bottom:none}
+.schedule-date{min-width:76px;font-weight:800;font-size:11px;color:var(--accent);flex-shrink:0}
+.schedule-type-badge{font-size:10px;min-width:62px;flex-shrink:0}
+
+/* WEBINAR ADD FORM */
+.webinar-add-form{background:var(--lt-navy);border-radius:8px;padding:14px 16px;margin-top:12px;
+  display:grid;grid-template-columns:120px 1fr 1fr 70px 70px 1fr auto;gap:8px;align-items:end}
+.webinar-add-form label{font-size:10px;color:var(--txg);font-weight:600;display:block;margin-bottom:3px}
+.webinar-add-form input,.webinar-add-form select{
+  width:100%;padding:5px 7px;border:1px solid var(--border);border-radius:4px;
+  font-size:11px;font-family:inherit;background:#fff;color:var(--tx)}
+.webinar-add-form input:focus,.webinar-add-form select:focus{outline:none;border-color:var(--accent)}
+
+/* MONTHLY COMPARE TABLE */
+.monthly-compare th{background:var(--navy);color:#fff;padding:7px 10px;font-size:11px;font-weight:700;text-align:center}
+.monthly-compare td{padding:7px 10px;font-size:11px;text-align:center;border-bottom:1px solid var(--border)}
+.monthly-compare td:first-child{text-align:left;font-weight:600}
+.monthly-compare tr:nth-child(even){background:#FAFBFD}
+.monthly-compare tr:hover{background:var(--lt-navy)}
+.monthly-compare .total-row{background:var(--lt-navy)!important;font-weight:800;color:var(--accent)}
+
 /* ── PRINT STYLES ── */
 @media print{
   .hd-btn,.memo-toggle,.memo-panel,.save-notice,.tab-bar,
@@ -348,6 +378,20 @@ td.num{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
           <tr><td>セミナー</td><td class="center">20</td><td class="center">1</td><td class="num" style="color:var(--red)">5.0%</td><td><span class="badge badge-red">△ROI確認</span></td></tr>
         </tbody>
       </table>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">チャネルKPI 月次比較</div>
+    <div id="dashboard-monthly-compare" style="overflow-x:auto">
+      <p style="color:var(--txg);font-size:11px;padding:8px 0">「チャネルKPI」タブの月次モニタリングにデータを入力すると、ここに比較テーブルが表示されます。</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">集約スケジュール（直近のウェビナー＆YouTubeコラボ）</div>
+    <div id="dashboard-schedule">
+      <p style="color:var(--txg);font-size:11px;padding:8px 0">スケジュールを読み込んでいます...</p>
     </div>
   </div>
 </div>
@@ -508,11 +552,11 @@ td.num{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px">
     <div class="card" style="border-top:3px solid var(--green)">
       <div class="kpi-label">出演確定</div>
-      <div class="kpi-val green">6件</div>
+      <div class="kpi-val green" id="yt-confirmed-count">6件</div>
     </div>
     <div class="card" style="border-top:3px solid var(--orange)">
       <div class="kpi-label">打診中</div>
-      <div class="kpi-val orange">5件</div>
+      <div class="kpi-val orange" id="yt-pending-count">5件</div>
     </div>
   </div>
 
@@ -570,11 +614,11 @@ td.num{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
       </div>
       <div>
         <label>収録予定日</label>
-        <input id="yt-new-rec" placeholder="未定">
+        <input id="yt-new-rec" type="date">
       </div>
       <div>
         <label>公開予定日</label>
-        <input id="yt-new-pub" placeholder="未定">
+        <input id="yt-new-pub" type="date">
       </div>
       <div>
         <label>備考・アクション</label>
@@ -594,12 +638,18 @@ td.num{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
 
   <div class="card">
     <div class="card-title">事例コンテンツ進捗（目標：4件 → 20件）</div>
-    <div style="display:flex;align-items:center;gap:16px;margin-bottom:14px">
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:10px">
       <div style="font-size:28px;font-weight:900;color:var(--orange)" id="case-count-display">4 <span style="font-size:14px;color:var(--txg)">/ 20件</span></div>
       <div style="flex:1">
         <div style="font-size:10px;color:var(--txg);margin-bottom:4px" id="case-rate-display">達成率 20%</div>
         <div class="prog-wrap"><div class="prog-bar orange" style="width:20%" id="case-prog"></div></div>
       </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+      <span style="font-size:11px;color:var(--txg)">ステータス内訳：</span>
+      <span class="badge badge-green" id="case-badge-published">公開済み 4件</span>
+      <span class="badge badge-orange" id="case-badge-wip">打診中/制作中 0件</span>
+      <span class="badge badge-gray" id="case-badge-todo">未着手 16件</span>
     </div>
     <div class="tbl-wrap">
     <table>
@@ -664,15 +714,47 @@ td.num{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
   <div id="webinar-list"></div>
 
   <div class="card">
-    <div class="card-title">ウェビナー追加枠（空枠）</div>
+    <div class="card-title">ウェビナー追加枠</div>
     <div class="tbl-wrap">
     <table>
       <thead><tr>
         <th>開催日</th><th>ウェビナー名</th><th>共催先</th>
         <th class="center">参加目標</th><th class="center">実績</th><th class="center">商談転換</th><th>備考</th>
+        <th style="width:36px"></th>
       </tr></thead>
       <tbody id="webinar-extra"></tbody>
     </table>
+    </div>
+
+    <!-- WEBINAR ADD FORM -->
+    <div class="webinar-add-form" id="webinar-add-form">
+      <div>
+        <label>開催日</label>
+        <input id="wb-new-date" type="date">
+      </div>
+      <div>
+        <label>ウェビナー名</label>
+        <input id="wb-new-name" placeholder="例：〇〇共催ウェビナー">
+      </div>
+      <div>
+        <label>共催先</label>
+        <input id="wb-new-partner" placeholder="共催先名">
+      </div>
+      <div>
+        <label>参加目標</label>
+        <input id="wb-new-target" type="number" min="0" placeholder="30">
+      </div>
+      <div>
+        <label>実績</label>
+        <input id="wb-new-actual" type="number" min="0" placeholder="0">
+      </div>
+      <div>
+        <label>備考</label>
+        <input id="wb-new-note" placeholder="メモ...">
+      </div>
+      <div style="padding-top:16px">
+        <button class="btn-sm green" onclick="addWebinarRow()">＋ 追加</button>
+      </div>
     </div>
   </div>
 </div>
@@ -823,7 +905,7 @@ function printPDF() {
 // BACKUP / RESTORE
 // ═══════════════════════════════════════════
 function exportBackup() {
-  const keys = ['monthly','yt','yt_extra','cases','shorts','webinars','memo'];
+  const keys = ['monthly','yt','yt_extra','cases','shorts','webinars','webinar_extra','memo'];
   const backup = { _version: 1, _date: new Date().toISOString() };
   keys.forEach(k => {
     const v = localStorage.getItem('as_kpi_' + k);
@@ -940,6 +1022,7 @@ function saveMonthly(ci, mi, val) {
   data[`${ci}_${mi}`] = val;
   save('monthly', data);
   updateTotals(data);
+  renderDashboardMonthly();
 }
 
 function updateTotals(data) {
@@ -1033,6 +1116,25 @@ const statusLabel = {
   target:    '<span class="badge badge-blue">🎯 希望枠</span>',
 };
 
+function updateYTCounts() {
+  const saved = load('yt', {});
+  const extra = load('yt_extra', []);
+  let confirmed = 0, pending = 0;
+  ytData.forEach((d, i) => {
+    const status = saved[`status_${i}`] || d.status;
+    if (status === 'confirmed') confirmed++;
+    else if (status === 'pending') pending++;
+  });
+  extra.forEach(d => {
+    if ((d.status||'') === 'confirmed') confirmed++;
+    else if ((d.status||'') === 'pending') pending++;
+  });
+  const ce = document.getElementById('yt-confirmed-count');
+  const pe = document.getElementById('yt-pending-count');
+  if (ce) ce.textContent = confirmed + '件';
+  if (pe) pe.textContent = pending + '件';
+}
+
 function renderYT() {
   const saved = load('yt', {});
   const extra = load('yt_extra', []);
@@ -1040,24 +1142,24 @@ function renderYT() {
 
   // Fixed rows
   const fixedRows = ytData.map((d, i) => {
-    const rec  = saved[`rec_${i}`]  || '';
-    const pub  = saved[`pub_${i}`]  || '';
-    const note = saved[`note_${i}`] || d.note || '';
+    const rec    = saved[`rec_${i}`]    || '';
+    const pub    = saved[`pub_${i}`]    || '';
+    const note   = saved[`note_${i}`]  || d.note || '';
     const status = saved[`status_${i}`] || d.status;
     return `<tr>
       <td><strong>${d.name}</strong><br><span style="font-size:10px;color:var(--txg)">${d.handle}</span></td>
       <td class="center">
-        <select onchange="saveYT('status_${i}',this.value)" style="font-size:10px;border:1px solid var(--border);border-radius:4px;padding:2px 4px">
+        <select onchange="saveYT('status_${i}',this.value);updateYTCounts();renderDashboardSchedule()" style="font-size:10px;border:1px solid var(--border);border-radius:4px;padding:2px 4px">
           <option value="confirmed" ${status==='confirmed'?'selected':''}>✅ 確定</option>
           <option value="pending"   ${status==='pending'  ?'selected':''}>🔄 打診中</option>
           <option value="new"       ${status==='new'      ?'selected':''}>📌 未打診</option>
           <option value="target"    ${status==='target'   ?'selected':''}>🎯 希望枠</option>
         </select>
       </td>
-      <td class="center"><input class="editable" value="${rec}" placeholder="未定"
-        onchange="saveYT('rec_${i}',this.value)" style="text-align:center"></td>
-      <td class="center"><input class="editable" value="${pub}" placeholder="未定"
-        onchange="saveYT('pub_${i}',this.value)" style="text-align:center"></td>
+      <td class="center"><input type="date" class="date-input" value="${rec}"
+        onchange="saveYT('rec_${i}',this.value);renderDashboardSchedule()"></td>
+      <td class="center"><input type="date" class="date-input" value="${pub}"
+        onchange="saveYT('pub_${i}',this.value);renderDashboardSchedule()"></td>
       <td><input class="editable" value="${note}" placeholder="メモ..."
         onchange="saveYT('note_${i}',this.value)"></td>
       <td></td>
@@ -1070,17 +1172,17 @@ function renderYT() {
       <td><input class="editable" value="${d.name||''}" placeholder="チャンネル名"
         onchange="saveYTExtra(${i},'name',this.value)"></td>
       <td class="center">
-        <select onchange="saveYTExtra(${i},'status',this.value)" style="font-size:10px;border:1px solid var(--border);border-radius:4px;padding:2px 4px">
+        <select onchange="saveYTExtra(${i},'status',this.value);updateYTCounts();renderDashboardSchedule()" style="font-size:10px;border:1px solid var(--border);border-radius:4px;padding:2px 4px">
           <option value="confirmed" ${(d.status||'')==='confirmed'?'selected':''}>✅ 確定</option>
           <option value="pending"   ${(d.status||'')==='pending'  ?'selected':''}>🔄 打診中</option>
           <option value="new"       ${(d.status||'')==='new'      ?'selected':''}>📌 未打診</option>
           <option value="target"    ${(d.status||'')==='target'   ?'selected':''}>🎯 希望枠</option>
         </select>
       </td>
-      <td class="center"><input class="editable" value="${d.rec||''}" placeholder="未定"
-        onchange="saveYTExtra(${i},'rec',this.value)" style="text-align:center"></td>
-      <td class="center"><input class="editable" value="${d.pub||''}" placeholder="未定"
-        onchange="saveYTExtra(${i},'pub',this.value)" style="text-align:center"></td>
+      <td class="center"><input type="date" class="date-input" value="${d.rec||''}"
+        onchange="saveYTExtra(${i},'rec',this.value);renderDashboardSchedule()"></td>
+      <td class="center"><input type="date" class="date-input" value="${d.pub||''}"
+        onchange="saveYTExtra(${i},'pub',this.value);renderDashboardSchedule()"></td>
       <td><input class="editable" value="${d.note||''}" placeholder="メモ..."
         onchange="saveYTExtra(${i},'note',this.value)"></td>
       <td class="center"><button class="del-btn" onclick="deleteYTExtra(${i})" title="削除">🗑️</button></td>
@@ -1088,6 +1190,7 @@ function renderYT() {
   }).join('');
 
   tb.innerHTML = fixedRows + extraRows;
+  updateYTCounts();
 }
 
 function saveYT(key, val) {
@@ -1121,13 +1224,13 @@ function addYTRow() {
   const extra = load('yt_extra', []);
   extra.push({ name, status, rec, pub, note });
   save('yt_extra', extra);
-  // clear form
   document.getElementById('yt-new-name').value = '';
   document.getElementById('yt-new-rec').value  = '';
   document.getElementById('yt-new-pub').value  = '';
   document.getElementById('yt-new-note').value = '';
   document.getElementById('yt-new-status').value = 'new';
   renderYT();
+  renderDashboardSchedule();
 }
 
 // ═══════════════════════════════════════════
@@ -1151,7 +1254,7 @@ const personaBadge = {
   '③拡大立て直し':'<span class="badge badge-orange">③</span>',
 };
 
-function updateCaseKPI(pubCount) {
+function updateCaseKPI(pubCount, wipCount, todoCount) {
   const total = 20;
   const pct = Math.round(pubCount / total * 100);
   const remaining = Math.max(0, total - pubCount);
@@ -1163,6 +1266,14 @@ function updateCaseKPI(pubCount) {
   if (rateDisplay) rateDisplay.textContent = `達成率 ${pct}%`;
   const prog = document.getElementById('case-prog');
   if (prog) prog.style.width = pct + '%';
+
+  // Status badges
+  const bPub = document.getElementById('case-badge-published');
+  if (bPub) bPub.textContent = `公開済み ${pubCount}件`;
+  const bWip = document.getElementById('case-badge-wip');
+  if (bWip) bWip.textContent = `打診中/制作中 ${wipCount}件`;
+  const bTodo = document.getElementById('case-badge-todo');
+  if (bTodo) bTodo.textContent = `未着手 ${todoCount}件`;
 
   // Dashboard KPI card
   const kpiVal = document.getElementById('kpi-case-val');
@@ -1176,14 +1287,17 @@ function updateCaseKPI(pubCount) {
 function renderCases() {
   const saved = load('cases', {});
   const tb = document.getElementById('case-tbody');
-  let pubCount = 0;
+  let pubCount = 0, wipCount = 0, todoCount = 0;
   tb.innerHTML = caseData.map((d, i) => {
     const status = saved[`status_${i}`] || d.status;
     const date1  = saved[`date1_${i}`]  || '';
     const date2  = saved[`date2_${i}`]  || '';
     const note   = saved[`note_${i}`]   || '';
     if (status === 'published') pubCount++;
-    const bg = status === 'published' ? 'background:var(--lt-green)' : '';
+    else if (status === 'wip') wipCount++;
+    else todoCount++;
+    const bg = status === 'published' ? 'background:var(--lt-green)' :
+               status === 'wip'       ? 'background:var(--lt-orange)' : '';
     return `<tr style="${bg}">
       <td><input class="editable" value="${saved['title_'+i]||d.title}"
         onchange="saveCase('title_${i}',this.value)"></td>
@@ -1191,19 +1305,19 @@ function renderCases() {
       <td class="center">
         <select onchange="saveCase('status_${i}',this.value)" style="font-size:11px;border:1px solid var(--border);border-radius:4px;padding:2px 4px">
           <option value="todo" ${status==='todo'?'selected':''}>📌 未着手</option>
-          <option value="wip"  ${status==='wip' ?'selected':''}>🔄 制作中</option>
+          <option value="wip"  ${status==='wip' ?'selected':''}>🔄 打診中/制作中</option>
           <option value="published" ${status==='published'?'selected':''}>✅ 公開済み</option>
         </select>
       </td>
-      <td><input class="editable" value="${date1}" placeholder="未定"
+      <td><input type="date" class="date-input" value="${date1}"
         onchange="saveCase('date1_${i}',this.value)"></td>
-      <td><input class="editable" value="${date2}" placeholder="未定"
+      <td><input type="date" class="date-input" value="${date2}"
         onchange="saveCase('date2_${i}',this.value)"></td>
       <td><input class="editable" value="${note}" placeholder="メモ..."
         onchange="saveCase('note_${i}',this.value)"></td>
     </tr>`;
   }).join('');
-  updateCaseKPI(pubCount);
+  updateCaseKPI(pubCount, wipCount, todoCount);
 }
 
 function saveCase(key, val) {
@@ -1297,19 +1411,24 @@ function renderWebinars() {
     </div>`;
   }).join('');
 
+  renderWebinarExtra();
+}
+
+function renderWebinarExtra() {
+  const extras = load('webinar_extra', []);
   const etb = document.getElementById('webinar-extra');
-  etb.innerHTML = Array.from({length:4},(_,i) => {
-    const k  = `extra_${i}`;
-    const sv = saved[k] || {};
+  if (!etb) return;
+  etb.innerHTML = extras.map((sv, i) => {
     const bg = i%2===0 ? 'background:#FAFBFD' : '';
     return `<tr style="${bg}">
-      <td><input class="editable" value="${sv.date||''}" placeholder="例：2026/09/10" onchange="saveWebinarExtra(${i},'date',this.value)"></td>
-      <td><input class="editable" value="${sv.name||''}" placeholder="ウェビナー名" onchange="saveWebinarExtra(${i},'name',this.value)"></td>
-      <td><input class="editable" value="${sv.partner||''}" placeholder="共催先" onchange="saveWebinarExtra(${i},'partner',this.value)"></td>
-      <td class="center"><input class="monthly-input" value="${sv.target||''}" placeholder="0" onchange="saveWebinarExtra(${i},'target',this.value)"></td>
-      <td class="center"><input class="monthly-input" value="${sv.actual||''}" placeholder="0" onchange="saveWebinarExtra(${i},'actual',this.value)"></td>
-      <td class="center"><input class="monthly-input" value="${sv.conv||''}" placeholder="0" onchange="saveWebinarExtra(${i},'conv',this.value)"></td>
-      <td><input class="editable" value="${sv.note||''}" placeholder="メモ..." onchange="saveWebinarExtra(${i},'note',this.value)"></td>
+      <td><input type="date" class="date-input" value="${sv.date||''}" onchange="saveWebinarExtraArr(${i},'date',this.value)"></td>
+      <td><input class="editable" value="${sv.name||''}" placeholder="ウェビナー名" onchange="saveWebinarExtraArr(${i},'name',this.value)"></td>
+      <td><input class="editable" value="${sv.partner||''}" placeholder="共催先" onchange="saveWebinarExtraArr(${i},'partner',this.value)"></td>
+      <td class="center"><input class="monthly-input" value="${sv.target||''}" placeholder="0" onchange="saveWebinarExtraArr(${i},'target',this.value)"></td>
+      <td class="center"><input class="monthly-input" value="${sv.actual||''}" placeholder="0" onchange="saveWebinarExtraArr(${i},'actual',this.value)"></td>
+      <td class="center"><input class="monthly-input" value="${sv.conv||''}" placeholder="0" onchange="saveWebinarExtraArr(${i},'conv',this.value)"></td>
+      <td><input class="editable" value="${sv.note||''}" placeholder="メモ..." onchange="saveWebinarExtraArr(${i},'note',this.value)"></td>
+      <td class="center"><button class="del-btn" onclick="deleteWebinarExtra(${i})" title="削除">🗑️</button></td>
     </tr>`;
   }).join('');
 }
@@ -1320,16 +1439,214 @@ function saveWebinar(key, val) {
   save('webinars', data);
   renderWebinars();
 }
-function saveWebinarExtra(i, field, val) {
-  const data = load('webinars', {});
-  if (!data[`extra_${i}`]) data[`extra_${i}`] = {};
-  data[`extra_${i}`][field] = val;
-  save('webinars', data);
+
+function saveWebinarExtraArr(i, field, val) {
+  const extras = load('webinar_extra', []);
+  if (!extras[i]) extras[i] = {};
+  extras[i][field] = val;
+  save('webinar_extra', extras);
+  renderDashboardSchedule();
 }
+
+function deleteWebinarExtra(i) {
+  if (!confirm('このウェビナーを削除しますか？')) return;
+  const extras = load('webinar_extra', []);
+  extras.splice(i, 1);
+  save('webinar_extra', extras);
+  renderWebinarExtra();
+  renderDashboardSchedule();
+}
+
+function addWebinarRow() {
+  const date    = document.getElementById('wb-new-date').value.trim();
+  const name    = document.getElementById('wb-new-name').value.trim();
+  const partner = document.getElementById('wb-new-partner').value.trim();
+  const target  = document.getElementById('wb-new-target').value.trim();
+  const actual  = document.getElementById('wb-new-actual').value.trim();
+  const note    = document.getElementById('wb-new-note').value.trim();
+  if (!name) { alert('ウェビナー名を入力してください'); return; }
+  const extras = load('webinar_extra', []);
+  extras.push({ date, name, partner, target, actual, note });
+  save('webinar_extra', extras);
+  document.getElementById('wb-new-date').value    = '';
+  document.getElementById('wb-new-name').value    = '';
+  document.getElementById('wb-new-partner').value = '';
+  document.getElementById('wb-new-target').value  = '';
+  document.getElementById('wb-new-actual').value  = '';
+  document.getElementById('wb-new-note').value    = '';
+  renderWebinarExtra();
+  renderDashboardSchedule();
+}
+
+// Backward compat: migrate old webinar extra data format
+function migrateWebinarExtra() {
+  const old = load('webinars', {});
+  const newArr = load('webinar_extra', null);
+  if (newArr !== null) return; // already migrated
+  const migrated = [];
+  for (let i = 0; i < 4; i++) {
+    const sv = old[`extra_${i}`];
+    if (sv && (sv.name || sv.date)) migrated.push(sv);
+  }
+  save('webinar_extra', migrated);
+}
+
+// ═══════════════════════════════════════════
+// DASHBOARD: MONTHLY COMPARE
+// ═══════════════════════════════════════════
+function renderDashboardMonthly() {
+  const data = load('monthly', {});
+  const container = document.getElementById('dashboard-monthly-compare');
+  if (!container) return;
+
+  // Check if any data entered
+  let hasData = false;
+  channels.forEach((_, ci) => {
+    months.forEach((_, mi) => {
+      if (data[`${ci}_${mi}`]) hasData = true;
+    });
+  });
+
+  if (!hasData) {
+    container.innerHTML = '<p style="color:var(--txg);font-size:11px;padding:8px 0">「チャネルKPI」タブの月次モニタリングにデータを入力すると、ここに比較テーブルが表示されます。</p>';
+    return;
+  }
+
+  // Build table
+  let html = '<table class="monthly-compare" style="width:100%;border-collapse:collapse">';
+  html += '<thead><tr><th style="text-align:left">チャネル</th>';
+  months.forEach(m => { html += `<th>${m}</th>`; });
+  html += '</tr></thead><tbody>';
+
+  channels.forEach((ch, ci) => {
+    html += `<tr><td>${ch}</td>`;
+    months.forEach((_, mi) => {
+      const val = data[`${ci}_${mi}`] || '';
+      html += `<td>${val !== '' ? val + '件' : '-'}</td>`;
+    });
+    html += '</tr>';
+  });
+
+  // Totals row
+  html += '<tr class="total-row"><td>合計</td>';
+  months.forEach((_, mi) => {
+    let sum = 0;
+    channels.forEach((_, ci) => { sum += parseInt(data[`${ci}_${mi}`]||0)||0; });
+    html += `<td>${sum > 0 ? sum + '件' : '-'}</td>`;
+  });
+  html += '</tr>';
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════
+// DASHBOARD: SCHEDULE TIMELINE
+// ═══════════════════════════════════════════
+function renderDashboardSchedule() {
+  const container = document.getElementById('dashboard-schedule');
+  if (!container) return;
+
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const items = [];
+
+  // Fixed webinars
+  webinarData.forEach(d => {
+    const parts = d.date.split('/');
+    const dt = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+    items.push({ dt, label: d.name, sub: '共催：' + d.partner, type: 'webinar', dateStr: d.date });
+  });
+
+  // Extra webinars
+  const wbExtras = load('webinar_extra', []);
+  wbExtras.forEach(sv => {
+    if (!sv.date || !sv.name) return;
+    const dt = new Date(sv.date);
+    if (isNaN(dt)) return;
+    const ds = sv.date.replace(/-/g, '/');
+    items.push({ dt, label: sv.name, sub: sv.partner ? '共催：' + sv.partner : '', type: 'webinar', dateStr: ds });
+  });
+
+  // YouTube collabs with dates
+  const ytSaved = load('yt', {});
+  const ytExtra = load('yt_extra', []);
+
+  ytData.forEach((d, i) => {
+    const status = ytSaved[`status_${i}`] || d.status;
+    const pub    = ytSaved[`pub_${i}`]    || '';
+    const rec    = ytSaved[`rec_${i}`]    || '';
+    if ((status === 'confirmed' || status === 'pending') && (pub || rec)) {
+      const dateStr = pub || rec;
+      const dt = new Date(dateStr);
+      if (!isNaN(dt)) {
+        items.push({ dt, label: d.name, sub: pub ? '公開予定' : '収録予定', type: 'youtube', dateStr: dateStr });
+      }
+    }
+  });
+  ytExtra.forEach(d => {
+    const dateStr = d.pub || d.rec || '';
+    if (!dateStr || !d.name) return;
+    const dt = new Date(dateStr);
+    if (isNaN(dt)) return;
+    items.push({ dt, label: d.name, sub: d.pub ? '公開予定' : '収録予定', type: 'youtube', dateStr: dateStr });
+  });
+
+  // Sort by date
+  items.sort((a, b) => a.dt - b.dt);
+
+  if (items.length === 0) {
+    container.innerHTML = '<p style="color:var(--txg);font-size:11px;padding:8px 0">YouTubeコラボに日付を入力するか、ウェビナー追加枠を追加すると、ここにスケジュールが表示されます。</p>';
+    return;
+  }
+
+  const fmt = dt => {
+    const y = dt.getFullYear(), m = dt.getMonth()+1, d2 = dt.getDate();
+    const w = ['日','月','火','水','木','金','土'][dt.getDay()];
+    return `${y}/${String(m).padStart(2,'0')}/${String(d2).padStart(2,'0')}（${w}）`;
+  };
+
+  container.innerHTML = items.map(item => {
+    const isPast = item.dt < today;
+    const typeIcon = item.type === 'webinar' ? '📅' : '🎬';
+    const typeBadge = item.type === 'webinar'
+      ? '<span class="badge badge-blue schedule-type-badge">ウェビナー</span>'
+      : '<span class="badge badge-green schedule-type-badge">YouTubeコラボ</span>';
+    const pastStyle = isPast ? 'opacity:.55' : '';
+    return `<div class="schedule-item" style="${pastStyle}">
+      <span class="schedule-date">${typeIcon} ${fmt(item.dt)}</span>
+      ${typeBadge}
+      <span style="flex:1;font-weight:600">${item.label}</span>
+      ${item.sub ? `<span style="font-size:10px;color:var(--txg)">${item.sub}</span>` : ''}
+      ${isPast ? '<span class="badge badge-gray" style="font-size:9px">終了</span>' : ''}
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════
+// LEAD DATA SEED (Numbers file 2026-07-01)
+// チャネル別商談実施件数：6月・7月
+// channels index: 0=リファラル 1=交流会 2=YouTube 3=お問い合わせ 4=書籍 5=SNS 6=セミナー
+// months  index: 0=6月 1=7月
+// ═══════════════════════════════════════════
+(function applyLeadSeed() {
+  const VER = '2026-07-01-v1';
+  if (localStorage.getItem('as_kpi_lead_seed_ver') === JSON.stringify(VER)) return;
+  const data = load('monthly', {});
+  const seed = {
+    // 6月: リファラル1・交流会3・お問い合わせ3・書籍4（オンリーストーリー3件は別集計）
+    '0_0': '1', '1_0': '3', '3_0': '3', '4_0': '4',
+    // 7月: リファラル2・交流会1・お問い合わせ4・SNS1・セミナー2
+    '0_1': '2', '1_1': '1', '3_1': '4', '5_1': '1', '6_1': '2',
+  };
+  Object.assign(data, seed);
+  localStorage.setItem('as_kpi_monthly', JSON.stringify(data));
+  localStorage.setItem('as_kpi_lead_seed_ver', JSON.stringify(VER));
+})();
 
 // ═══════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════
+migrateWebinarExtra();
 renderBars();
 renderMonthly();
 renderYT();
@@ -1337,6 +1654,12 @@ renderCases();
 renderShorts();
 renderWebinars();
 initMemo();
+renderDashboardMonthly();
+renderDashboardSchedule();
+
+// Update dashboard monthly when monthly data is saved
+const _origSaveMonthly = saveMonthly;
+// Re-render dashboard monthly on channel data change is handled inside saveMonthly calls
 </script>
 </body>
 </html>
