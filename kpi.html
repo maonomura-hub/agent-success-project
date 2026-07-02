@@ -242,7 +242,7 @@ td.num{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
 
 /* WEBINAR ADD FORM */
 .webinar-add-form{background:var(--lt-navy);border-radius:8px;padding:14px 16px;margin-top:12px;
-  display:grid;grid-template-columns:120px 1fr 1fr 70px 70px 1fr auto;gap:8px;align-items:end}
+  display:grid;grid-template-columns:120px 1fr 1fr 70px 70px 70px 1fr auto;gap:8px;align-items:end}
 .webinar-add-form label{font-size:10px;color:var(--txg);font-weight:600;display:block;margin-bottom:3px}
 .webinar-add-form input,.webinar-add-form select{
   width:100%;padding:5px 7px;border:1px solid var(--border);border-radius:4px;
@@ -692,15 +692,18 @@ input[type=number].wb-num-input{-moz-appearance:textfield}
     </div>
     <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
       <span style="font-size:11px;color:var(--txg)">ステータス内訳：</span>
-      <span class="badge badge-green" id="case-badge-published">公開済み 4件</span>
-      <span class="badge badge-orange" id="case-badge-wip">打診中/制作中 0件</span>
-      <span class="badge badge-gray" id="case-badge-todo">未着手 16件</span>
+      <span class="badge badge-gray" id="case-badge-todo">未着手 0件</span>
+      <span class="badge badge-orange" id="case-badge-contact">打診中 0件</span>
+      <span class="badge badge-blue" id="case-badge-ok">OK 0件</span>
+      <span class="badge badge-blue" id="case-badge-wip">制作中 0件</span>
+      <span class="badge badge-green" id="case-badge-done">完了 0件</span>
+      <span class="badge badge-red" id="case-badge-ng">NG 0件</span>
     </div>
     <div class="tbl-wrap">
     <table>
       <thead><tr>
-        <th style="min-width:220px">事例タイトル</th>
-        <th>ペルソナ</th><th>ステータス</th>
+        <th style="min-width:220px">社名</th>
+        <th>業界</th><th>ステータス</th>
         <th style="min-width:90px">取材予定日</th>
         <th style="min-width:90px">公開予定日</th>
         <th style="min-width:160px">担当・備考</th>
@@ -756,20 +759,18 @@ input[type=number].wb-num-input{-moz-appearance:textfield}
     </div>
   </div>
 
+  <div class="card" style="margin-bottom:12px">
+    <div class="card-title">月次参加目標サマリー（目標：400名/月）</div>
+    <div id="webinar-summary-content">
+      <p style="color:var(--txg);font-size:11px">ロード中...</p>
+    </div>
+  </div>
+
   <div id="webinar-list"></div>
 
   <div class="card">
     <div class="card-title">ウェビナー追加枠</div>
-    <div class="tbl-wrap">
-    <table>
-      <thead><tr>
-        <th>開催日</th><th>ウェビナー名</th><th>共催先</th>
-        <th class="center">参加目標</th><th class="center">実績</th><th class="center">商談転換</th><th>備考</th>
-        <th style="width:36px"></th>
-      </tr></thead>
-      <tbody id="webinar-extra"></tbody>
-    </table>
-    </div>
+    <div id="webinar-extra-cards"></div>
 
     <!-- WEBINAR ADD FORM -->
     <div class="webinar-add-form" id="webinar-add-form">
@@ -787,7 +788,12 @@ input[type=number].wb-num-input{-moz-appearance:textfield}
       </div>
       <div>
         <label>参加目標</label>
-        <input id="wb-new-target" type="number" min="0" placeholder="30">
+        <input id="wb-new-target" type="number" min="0" placeholder="30" oninput="document.getElementById('wb-new-conv-preview').textContent=Math.floor((+this.value||0)*0.1)+'件'">
+      </div>
+      <div>
+        <label>商談転換目標（自動）</label>
+        <strong id="wb-new-conv-preview" style="color:var(--accent);font-size:13px">0件</strong>
+        <span style="font-size:10px;color:var(--txg)">（×10%）</span>
       </div>
       <div>
         <label>実績</label>
@@ -1040,7 +1046,7 @@ function renderBars() {
 // ═══════════════════════════════════════════
 // MONTHLY TABLE + CSV UPLOAD
 // ═══════════════════════════════════════════
-const channels = ['リファラル','交流会','YouTube','お問い合わせ','書籍','SNS','セミナー'];
+const channels = ['リファラル','交流会','YouTube','お問い合わせ','書籍','SNS','セミナー','CCHトスアップ'];
 const months = ['6月','7月','8月','9月','10月','11月','12月'];
 
 function renderMonthly() {
@@ -1324,12 +1330,12 @@ const personaBadge = {
   '③拡大立て直し':'<span class="badge badge-orange">③</span>',
 };
 
-function updateCaseKPI(pubCount, wipCount, todoCount) {
+function updateCaseKPI(counts) {
+  const pubCount = counts.done || 0;
   const total = 20;
   const pct = Math.round(pubCount / total * 100);
   const remaining = Math.max(0, total - pubCount);
 
-  // Content tab
   const cntDisplay = document.getElementById('case-count-display');
   if (cntDisplay) cntDisplay.innerHTML = `${pubCount} <span style="font-size:14px;color:var(--txg)">/ ${total}件</span>`;
   const rateDisplay = document.getElementById('case-rate-display');
@@ -1337,15 +1343,19 @@ function updateCaseKPI(pubCount, wipCount, todoCount) {
   const prog = document.getElementById('case-prog');
   if (prog) prog.style.width = pct + '%';
 
-  // Status badges
-  const bPub = document.getElementById('case-badge-published');
-  if (bPub) bPub.textContent = `公開済み ${pubCount}件`;
-  const bWip = document.getElementById('case-badge-wip');
-  if (bWip) bWip.textContent = `打診中/制作中 ${wipCount}件`;
-  const bTodo = document.getElementById('case-badge-todo');
-  if (bTodo) bTodo.textContent = `未着手 ${todoCount}件`;
+  const bTodo    = document.getElementById('case-badge-todo');
+  if (bTodo)    bTodo.textContent    = `未着手 ${counts.todo||0}件`;
+  const bContact = document.getElementById('case-badge-contact');
+  if (bContact) bContact.textContent = `打診中 ${counts.contact||0}件`;
+  const bOk      = document.getElementById('case-badge-ok');
+  if (bOk)      bOk.textContent      = `OK ${counts.ok||0}件`;
+  const bWip     = document.getElementById('case-badge-wip');
+  if (bWip)     bWip.textContent     = `制作中 ${counts.wip||0}件`;
+  const bDone    = document.getElementById('case-badge-done');
+  if (bDone)    bDone.textContent    = `完了 ${pubCount}件`;
+  const bNg      = document.getElementById('case-badge-ng');
+  if (bNg)      bNg.textContent      = `NG ${counts.ng||0}件`;
 
-  // Dashboard KPI card
   const kpiVal = document.getElementById('kpi-case-val');
   if (kpiVal) kpiVal.innerHTML = `${pubCount} <span style="font-size:14px">/ ${total}件</span>`;
   const kpiSub = document.getElementById('kpi-case-sub');
@@ -1357,26 +1367,38 @@ function updateCaseKPI(pubCount, wipCount, todoCount) {
 function renderCases() {
   const saved = load('cases', {});
   const tb = document.getElementById('case-tbody');
-  let pubCount = 0, wipCount = 0, todoCount = 0;
+  let counts = {done:0, contact:0, ok:0, wip:0, todo:0, ng:0};
   tb.innerHTML = caseData.map((d, i) => {
     const status = saved[`status_${i}`] || d.status;
+    const normalizedStatus = status === 'published' ? 'done' : status;
     const date1  = saved[`date1_${i}`]  || '';
     const date2  = saved[`date2_${i}`]  || '';
     const note   = saved[`note_${i}`]   || '';
-    if (status === 'published') pubCount++;
-    else if (status === 'wip') wipCount++;
-    else todoCount++;
-    const bg = status === 'published' ? 'background:var(--lt-green)' :
-               status === 'wip'       ? 'background:var(--lt-orange)' : '';
+    if (normalizedStatus === 'done') counts.done++;
+    else if (normalizedStatus === 'contact') counts.contact++;
+    else if (normalizedStatus === 'ok') counts.ok++;
+    else if (normalizedStatus === 'wip') counts.wip++;
+    else if (normalizedStatus === 'ng') counts.ng++;
+    else counts.todo++;
+    const bg = normalizedStatus === 'done'    ? 'background:var(--lt-green)' :
+               normalizedStatus === 'contact' ? 'background:var(--lt-orange)' :
+               normalizedStatus === 'ok'      ? 'background:var(--lt-navy)' :
+               normalizedStatus === 'wip'     ? 'background:var(--lt-navy)' :
+               normalizedStatus === 'ng'      ? 'background:#F9FAFB;opacity:.6' : '';
     return `<tr style="${bg}">
       <td><input class="editable" value="${saved['title_'+i]||d.title}"
         onchange="saveCase('title_${i}',this.value)"></td>
-      <td class="center">${personaBadge[d.persona]||''}</td>
+      <td><input class="editable" value="${saved['persona_'+i]||d.persona||''}"
+        style="font-size:11px;min-width:80px"
+        placeholder="業界..." onchange="saveCase('persona_${i}',this.value)"></td>
       <td class="center">
         <select onchange="saveCase('status_${i}',this.value)" style="font-size:11px;border:1px solid var(--border);border-radius:4px;padding:2px 4px">
-          <option value="todo" ${status==='todo'?'selected':''}>📌 未着手</option>
-          <option value="wip"  ${status==='wip' ?'selected':''}>🔄 打診中/制作中</option>
-          <option value="published" ${status==='published'?'selected':''}>✅ 公開済み</option>
+          <option value="todo"    ${normalizedStatus==='todo'   ?'selected':''}>📌 未着手</option>
+          <option value="contact" ${normalizedStatus==='contact'?'selected':''}>📞 打診中</option>
+          <option value="ok"      ${normalizedStatus==='ok'     ?'selected':''}>✅ OK</option>
+          <option value="wip"     ${normalizedStatus==='wip'    ?'selected':''}>🔄 制作中</option>
+          <option value="done"    ${normalizedStatus==='done'   ?'selected':''}>🎉 完了</option>
+          <option value="ng"      ${normalizedStatus==='ng'     ?'selected':''}>❌ NG</option>
         </select>
       </td>
       <td><input type="date" class="date-input" value="${date1}"
@@ -1387,7 +1409,7 @@ function renderCases() {
         onchange="saveCase('note_${i}',this.value)"></td>
     </tr>`;
   }).join('');
-  updateCaseKPI(pubCount, wipCount, todoCount);
+  updateCaseKPI(counts);
 }
 
 function saveCase(key, val) {
@@ -1474,6 +1496,7 @@ function renderWebinars() {
           <span style="display:inline-flex;align-items:center;gap:4px">商談転換：<input type="number" class="wb-num-input" value="${conv}" placeholder="0" min="0"
             oninput="saveWebinar('conv_${i}',this.value)">件</span>
         </div>
+        <div style="margin-top:4px;font-size:11px;color:var(--accent)">商談転換目標：<strong id="wb-conv-target-${i}">${Math.floor(parseInt(target||0)*0.1)}件</strong>（参加目標×10%）</div>
         <div style="margin-top:6px">
           <input class="editable" value="${note}" placeholder="アクション・備考..."
             oninput="saveWebinar('note_${i}',this.value)" style="font-size:11px">
@@ -1488,25 +1511,61 @@ function renderWebinars() {
   }).join('');
 
   renderWebinarExtra();
+  renderWebinarSummary();
 }
 
 function renderWebinarExtra() {
   const extras = load('webinar_extra', []);
-  const etb = document.getElementById('webinar-extra');
-  if (!etb) return;
-  etb.innerHTML = extras.map((sv, i) => {
-    const bg = i%2===0 ? 'background:#FAFBFD' : '';
-    return `<tr style="${bg}">
-      <td><input type="date" class="date-input" value="${sv.date||''}" onchange="saveWebinarExtraArr(${i},'date',this.value)"></td>
-      <td><input class="editable" value="${sv.name||''}" placeholder="ウェビナー名" onchange="saveWebinarExtraArr(${i},'name',this.value)"></td>
-      <td><input class="editable" value="${sv.partner||''}" placeholder="共催先" onchange="saveWebinarExtraArr(${i},'partner',this.value)"></td>
-      <td class="center"><input type="number" class="monthly-input" value="${sv.target||''}" placeholder="0" min="0" oninput="saveWebinarExtraArr(${i},'target',this.value)"></td>
-      <td class="center"><input type="number" class="monthly-input" value="${sv.actual||''}" placeholder="0" min="0" oninput="saveWebinarExtraArr(${i},'actual',this.value)"></td>
-      <td class="center"><input type="number" class="monthly-input" value="${sv.conv||''}" placeholder="0" min="0" oninput="saveWebinarExtraArr(${i},'conv',this.value)"></td>
-      <td><input class="editable" value="${sv.note||''}" placeholder="メモ..." onchange="saveWebinarExtraArr(${i},'note',this.value)"></td>
-      <td class="center"><button class="del-btn" onclick="deleteWebinarExtra(${i})" title="削除">🗑️</button></td>
-    </tr>`;
+  const container = document.getElementById('webinar-extra-cards');
+  if (!container) return;
+  if (extras.length === 0) {
+    container.innerHTML = '<p style="color:var(--txg);font-size:11px;padding:8px 0">追加ウェビナーはまだありません。下のフォームから追加してください。</p>';
+    renderWebinarSummary();
+    return;
+  }
+  container.innerHTML = extras.map((sv, i) => {
+    const dt = sv.date ? new Date(sv.date) : null;
+    const monthStr = dt && !isNaN(dt) ? (dt.getMonth() + 1) + '月' : '--';
+    const dayStr   = dt && !isNaN(dt) ? dt.getDate() : '--';
+    const convTarget = Math.floor(parseInt(sv.target || 0) * 0.1);
+    return `<div class="card webinar-card">
+      <div class="date">
+        <div style="font-size:10px">${monthStr}</div>
+        <div class="day">${dayStr}</div>
+        <div style="font-size:10px">開催</div>
+      </div>
+      <div>
+        <h4><input class="editable" value="${sv.name||''}" style="font-size:13px;font-weight:700;width:100%;max-width:360px"
+          placeholder="ウェビナー名" oninput="saveWebinarExtraArr(${i},'name',this.value)"></h4>
+        <div class="partner">共催：<input class="editable" value="${sv.partner||''}" style="font-size:11px;width:140px"
+          placeholder="共催先" oninput="saveWebinarExtraArr(${i},'partner',this.value)"></div>
+        <div style="margin-top:6px;font-size:11px">
+          <input type="date" class="date-input" value="${sv.date||''}"
+            onchange="saveWebinarExtraArr(${i},'date',this.value);renderWebinarExtra();renderDashboardSchedule()">
+        </div>
+        <div style="margin-top:8px;font-size:11px;display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+          <span style="display:inline-flex;align-items:center;gap:4px">参加目標：<input type="number" class="wb-num-input" value="${sv.target||''}" placeholder="30" min="0"
+            oninput="saveWebinarExtraArr(${i},'target',this.value);document.getElementById('wb-extra-conv-${i}').textContent=Math.floor((+this.value||0)*0.1)+'件';renderWebinarSummary()">名</span>
+          <span style="display:inline-flex;align-items:center;gap:4px">実績：<input type="number" class="wb-num-input" value="${sv.actual||''}" placeholder="0" min="0"
+            oninput="saveWebinarExtraArr(${i},'actual',this.value)">名</span>
+          <span style="display:inline-flex;align-items:center;gap:4px">商談転換：<input type="number" class="wb-num-input" value="${sv.conv||''}" placeholder="0" min="0"
+            oninput="saveWebinarExtraArr(${i},'conv',this.value)">件</span>
+        </div>
+        <div style="margin-top:4px;font-size:11px;color:var(--accent)">商談転換目標：<strong id="wb-extra-conv-${i}">${convTarget}件</strong>（参加目標×10%）</div>
+        <div style="margin-top:6px">
+          <input class="editable" value="${sv.note||''}" placeholder="アクション・備考..."
+            oninput="saveWebinarExtraArr(${i},'note',this.value)" style="font-size:11px">
+        </div>
+      </div>
+      <div class="webinar-meta">
+        ${sv.actual
+          ? `<div style="font-size:18px;font-weight:800;color:var(--green)">${sv.actual}名</div><div style="font-size:10px">実績参加</div>`
+          : '<div style="color:var(--txg);font-size:11px">未開催</div>'}
+        <div style="margin-top:8px"><button class="del-btn" onclick="deleteWebinarExtra(${i})" title="削除">🗑️</button></div>
+      </div>
+    </div>`;
   }).join('');
+  renderWebinarSummary();
 }
 
 function saveWebinar(key, val) {
@@ -1525,6 +1584,13 @@ function saveWebinar(key, val) {
         : '<div style="color:var(--txg);font-size:11px">未開催</div>';
     }
   }
+  const t = key.match(/^target_(\d+)$/);
+  if (t) {
+    const i = parseInt(t[1]);
+    const el = document.getElementById('wb-conv-target-' + i);
+    if (el) el.textContent = Math.floor(parseInt(val||0)*0.1) + '件';
+    renderWebinarSummary();
+  }
 }
 
 function saveWebinarExtraArr(i, field, val) {
@@ -1542,6 +1608,7 @@ function deleteWebinarExtra(i) {
   save('webinar_extra', extras);
   renderWebinarExtra();
   renderDashboardSchedule();
+  renderWebinarSummary();
 }
 
 function addWebinarRow() {
@@ -1563,6 +1630,7 @@ function addWebinarRow() {
   document.getElementById('wb-new-note').value    = '';
   renderWebinarExtra();
   renderDashboardSchedule();
+  renderWebinarSummary();
 }
 
 // Backward compat: migrate old webinar extra data format
@@ -1576,6 +1644,59 @@ function migrateWebinarExtra() {
     if (sv && (sv.name || sv.date)) migrated.push(sv);
   }
   save('webinar_extra', migrated);
+}
+
+// ═══════════════════════════════════════════
+// WEBINAR SUMMARY
+// ═══════════════════════════════════════════
+function renderWebinarSummary() {
+  const saved = load('webinars', {});
+  const extras = load('webinar_extra', []);
+  const monthMap = {};
+
+  webinarData.forEach((d, i) => {
+    const target = parseInt(saved[`target_${i}`] !== undefined ? saved[`target_${i}`] : d.target) || 0;
+    const month = d.month;
+    if (!monthMap[month]) monthMap[month] = { target: 0, conv: 0 };
+    monthMap[month].target += target;
+    monthMap[month].conv += Math.floor(target * 0.1);
+  });
+
+  extras.forEach(sv => {
+    if (!sv.date) return;
+    const dt = new Date(sv.date);
+    if (isNaN(dt)) return;
+    const month = (dt.getMonth() + 1) + '月';
+    const target = parseInt(sv.target) || 0;
+    if (!monthMap[month]) monthMap[month] = { target: 0, conv: 0 };
+    monthMap[month].target += target;
+    monthMap[month].conv += Math.floor(target * 0.1);
+  });
+
+  const el = document.getElementById('webinar-summary-content');
+  if (!el) return;
+
+  if (Object.keys(monthMap).length === 0) {
+    el.innerHTML = '<p style="color:var(--txg);font-size:11px">ウェビナーが登録されていません。</p>';
+    return;
+  }
+
+  const goalPerMonth = 400;
+  el.innerHTML = '<div style="display:flex;gap:12px;flex-wrap:wrap">' +
+    Object.entries(monthMap).map(([month, d]) => {
+      const pct = Math.min(100, Math.round(d.target / goalPerMonth * 100));
+      const color = pct >= 100 ? 'var(--green)' : pct >= 60 ? 'var(--accent)' : 'var(--orange)';
+      return `<div style="min-width:160px;flex:1;background:var(--lt-navy);border-radius:8px;padding:12px 14px">
+        <div style="font-size:11px;font-weight:700;color:var(--txg);margin-bottom:6px">${month}</div>
+        <div style="font-size:11px;display:flex;justify-content:space-between;margin-bottom:4px">
+          <span>参加目標合計</span><strong style="color:${color}">${d.target}名 <span style="font-size:10px;color:var(--txg)">/ 400名</span></strong>
+        </div>
+        <div class="prog-wrap" style="margin-bottom:8px"><div class="prog-bar" style="width:${pct}%;background:${color}"></div></div>
+        <div style="font-size:11px;display:flex;justify-content:space-between">
+          <span>商談予測</span><strong style="color:var(--accent)">${d.conv}件</strong>
+        </div>
+      </div>`;
+    }).join('') + '</div>';
 }
 
 // ═══════════════════════════════════════════
@@ -1787,6 +1908,7 @@ renderYT();
 renderCases();
 renderShorts();
 renderWebinars();
+renderWebinarSummary();
 initMemo();
 initDashboardKPIs();
 renderDashboardMonthly();
