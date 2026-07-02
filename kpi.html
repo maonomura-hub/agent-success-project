@@ -251,11 +251,22 @@ td.num{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
 
 /* MONTHLY COMPARE TABLE */
 .monthly-compare th{background:var(--navy);color:#fff;padding:7px 10px;font-size:11px;font-weight:700;text-align:center}
-.monthly-compare td{padding:7px 10px;font-size:11px;text-align:center;border-bottom:1px solid var(--border)}
-.monthly-compare td:first-child{text-align:left;font-weight:600}
+.monthly-compare td{padding:4px 6px;font-size:11px;text-align:center;border-bottom:1px solid var(--border)}
+.monthly-compare td:first-child{text-align:left;font-weight:600;padding:7px 10px}
 .monthly-compare tr:nth-child(even){background:#FAFBFD}
 .monthly-compare tr:hover{background:var(--lt-navy)}
 .monthly-compare .total-row{background:var(--lt-navy)!important;font-weight:800;color:var(--accent)}
+.monthly-compare .total-row td{padding:7px 10px}
+.monthly-compare input.dash-cell-input{
+  width:100%;min-width:36px;max-width:60px;
+  background:transparent;border:none;border-bottom:1.5px solid transparent;
+  text-align:center;font-size:11px;font-family:inherit;color:inherit;
+  padding:3px 2px;border-radius:0;outline:none;
+  transition:border-color .15s;
+}
+.monthly-compare input.dash-cell-input:hover{border-bottom-color:var(--accent)}
+.monthly-compare input.dash-cell-input:focus{border-bottom-color:var(--accent);background:rgba(255,255,255,.6)}
+.monthly-compare input.dash-cell-input::placeholder{color:#bbb}
 
 /* ── PRINT STYLES ── */
 @media print{
@@ -1019,10 +1030,35 @@ function renderMonthly() {
 
 function saveMonthly(ci, mi, val) {
   const data = load('monthly', {});
-  data[`${ci}_${mi}`] = val;
+  const trimmed = val.toString().trim();
+  if (trimmed === '') {
+    delete data[`${ci}_${mi}`];
+  } else {
+    data[`${ci}_${mi}`] = trimmed;
+  }
   save('monthly', data);
   updateTotals(data);
-  renderDashboardMonthly();
+
+  // ダッシュボード側の該当 input と合計行を個別更新（全再描画を避ける）
+  const dashContainer = document.getElementById('dashboard-monthly-compare');
+  if (dashContainer && dashContainer.querySelector('table')) {
+    // 入力欄を同期
+    const dashRows = dashContainer.querySelectorAll('tbody tr');
+    if (dashRows[ci]) {
+      const inputs = dashRows[ci].querySelectorAll('input.dash-cell-input');
+      if (inputs[mi]) inputs[mi].value = trimmed;
+    }
+    // 合計行を更新
+    months.forEach((_, mIdx) => {
+      let sum = 0;
+      channels.forEach((_, cIdx) => { sum += parseInt(data[`${cIdx}_${mIdx}`]||0)||0; });
+      const el = document.getElementById(`dash-total-${mIdx}`);
+      if (el) el.textContent = sum > 0 ? sum + '件' : '-';
+    });
+  } else {
+    // テーブルがまだ描画されていない場合は初回描画
+    renderDashboardMonthly();
+  }
 }
 
 function updateTotals(data) {
@@ -1492,27 +1528,14 @@ function migrateWebinarExtra() {
 }
 
 // ═══════════════════════════════════════════
-// DASHBOARD: MONTHLY COMPARE
+// DASHBOARD: MONTHLY COMPARE (編集可能)
 // ═══════════════════════════════════════════
 function renderDashboardMonthly() {
   const data = load('monthly', {});
   const container = document.getElementById('dashboard-monthly-compare');
   if (!container) return;
 
-  // Check if any data entered
-  let hasData = false;
-  channels.forEach((_, ci) => {
-    months.forEach((_, mi) => {
-      if (data[`${ci}_${mi}`]) hasData = true;
-    });
-  });
-
-  if (!hasData) {
-    container.innerHTML = '<p style="color:var(--txg);font-size:11px;padding:8px 0">「チャネルKPI」タブの月次モニタリングにデータを入力すると、ここに比較テーブルが表示されます。</p>';
-    return;
-  }
-
-  // Build table
+  // Build editable table (always shown)
   let html = '<table class="monthly-compare" style="width:100%;border-collapse:collapse">';
   html += '<thead><tr><th style="text-align:left">チャネル</th>';
   months.forEach(m => { html += `<th>${m}</th>`; });
@@ -1522,21 +1545,55 @@ function renderDashboardMonthly() {
     html += `<tr><td>${ch}</td>`;
     months.forEach((_, mi) => {
       const val = data[`${ci}_${mi}`] || '';
-      html += `<td>${val !== '' ? val + '件' : '-'}</td>`;
+      html += `<td><input type="number" class="dash-cell-input"
+        value="${val}" placeholder="-" min="0"
+        oninput="saveDashboardMonthly(${ci},${mi},this.value)"></td>`;
     });
     html += '</tr>';
   });
 
-  // Totals row
+  // Totals row (static cells with IDs, auto-updated)
   html += '<tr class="total-row"><td>合計</td>';
   months.forEach((_, mi) => {
     let sum = 0;
     channels.forEach((_, ci) => { sum += parseInt(data[`${ci}_${mi}`]||0)||0; });
-    html += `<td>${sum > 0 ? sum + '件' : '-'}</td>`;
+    html += `<td id="dash-total-${mi}">${sum > 0 ? sum + '件' : '-'}</td>`;
   });
   html += '</tr>';
   html += '</tbody></table>';
   container.innerHTML = html;
+}
+
+function saveDashboardMonthly(ci, mi, val) {
+  const data = load('monthly', {});
+  const trimmed = val.toString().trim();
+  if (trimmed === '' || trimmed === null) {
+    delete data[`${ci}_${mi}`];
+  } else {
+    data[`${ci}_${mi}`] = trimmed;
+  }
+  save('monthly', data);
+
+  // ダッシュボード合計行を更新
+  months.forEach((_, mIdx) => {
+    let sum = 0;
+    channels.forEach((_, cIdx) => { sum += parseInt(data[`${cIdx}_${mIdx}`]||0)||0; });
+    const el = document.getElementById(`dash-total-${mIdx}`);
+    if (el) el.textContent = sum > 0 ? sum + '件' : '-';
+  });
+
+  // チャネルKPIタブ側の合計行も更新
+  updateTotals(data);
+
+  // チャネルKPIタブの該当セルの input 値も同期
+  const tb = document.getElementById('monthly-body');
+  if (tb) {
+    const rows = tb.querySelectorAll('tr');
+    if (rows[ci]) {
+      const inputs = rows[ci].querySelectorAll('input');
+      if (inputs[mi]) inputs[mi].value = trimmed;
+    }
+  }
 }
 
 // ═══════════════════════════════════════════
