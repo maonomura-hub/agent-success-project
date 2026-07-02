@@ -276,6 +276,18 @@ input[type=number].dash-cell-input::-webkit-inner-spin-button,
 input[type=number].dash-cell-input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 input[type=number].dash-cell-input{-moz-appearance:textfield}
 
+/* KPI Card Inline Inputs */
+.kpi-input{
+  background:transparent;border:none;border-bottom:1.5px dashed var(--border);
+  font-size:22px;font-weight:800;font-family:inherit;color:var(--navy);
+  width:3.5em;padding:0 2px;outline:none;
+  transition:border-color .15s,background .15s;
+}
+.kpi-input:hover{border-bottom-color:var(--accent)}
+.kpi-input:focus{border-bottom-color:var(--accent);background:var(--lt-navy)}
+.kpi-input.green{color:var(--green)}
+.kpi-input.orange{color:var(--orange)}
+
 /* Webinar inline number inputs */
 .wb-num-input{
   width:48px;border:none;border-bottom:1.5px solid var(--border);
@@ -347,12 +359,12 @@ input[type=number].wb-num-input{-moz-appearance:textfield}
   <div class="kpi-grid">
     <div class="kpi-card">
       <div class="kpi-label">商談実施累計</div>
-      <div class="kpi-val">211件</div>
+      <div class="kpi-val"><input id="kpi-meetings" class="kpi-input" placeholder="211">件</div>
       <div class="kpi-sub">リード.csv ベース（集計済み）</div>
     </div>
     <div class="kpi-card green">
       <div class="kpi-label">累計受注件数</div>
-      <div class="kpi-val green">39件</div>
+      <div class="kpi-val green"><input id="kpi-orders" class="kpi-input green" placeholder="39">件</div>
       <div class="kpi-sub">受注率 18.5%</div>
     </div>
     <div class="kpi-card orange">
@@ -365,17 +377,17 @@ input[type=number].wb-num-input{-moz-appearance:textfield}
     </div>
     <div class="kpi-card">
       <div class="kpi-label">YouTube出演確定</div>
-      <div class="kpi-val">6件</div>
+      <div class="kpi-val"><input id="kpi-yt-count" class="kpi-input" placeholder="6">件</div>
       <div class="kpi-sub">打診中 5件 ｜ 未打診多数</div>
     </div>
     <div class="kpi-card green">
       <div class="kpi-label">ウェビナー予定（7-8月）</div>
-      <div class="kpi-val green">4件</div>
+      <div class="kpi-val green"><input id="kpi-wb-count" class="kpi-input green" placeholder="4">件</div>
       <div class="kpi-sub">次回：7/8 RYOMA共催</div>
     </div>
     <div class="kpi-card orange">
       <div class="kpi-label">月商目標（ペルソナ①）</div>
-      <div class="kpi-val orange">300-500万</div>
+      <div class="kpi-val orange"><input id="kpi-target" class="kpi-input orange" placeholder="300-500万" style="font-size:16px;width:6em"></div>
       <div class="kpi-sub">最高単価×YouTube経由</div>
     </div>
   </div>
@@ -938,7 +950,7 @@ function printPDF() {
 // BACKUP / RESTORE
 // ═══════════════════════════════════════════
 function exportBackup() {
-  const keys = ['monthly','yt','yt_extra','cases','shorts','webinars','webinar_extra','memo'];
+  const keys = ['monthly','yt','yt_extra','cases','shorts','webinars','webinar_extra','memo','dash_kpis'];
   const backup = { _version: 1, _date: new Date().toISOString() };
   keys.forEach(k => {
     const v = localStorage.getItem('as_kpi_' + k);
@@ -965,7 +977,7 @@ function handleRestore(event) {
   reader.onload = function(e) {
     try {
       const data = JSON.parse(e.target.result);
-      const keys = ['monthly','yt','yt_extra','cases','shorts','webinars','memo'];
+      const keys = ['monthly','yt','yt_extra','cases','shorts','webinars','webinar_extra','memo','dash_kpis'];
       keys.forEach(k => {
         if (data[k] !== undefined) {
           localStorage.setItem('as_kpi_' + k, JSON.stringify(data[k]));
@@ -1437,9 +1449,12 @@ function renderWebinars() {
   const saved = load('webinars', {});
   const wrap = document.getElementById('webinar-list');
   wrap.innerHTML = webinarData.map((d, i) => {
-    const actual = saved[`actual_${i}`] || '';
-    const conv   = saved[`conv_${i}`]   || '';
-    const note   = saved[`note_${i}`]   || '';
+    const actual  = saved[`actual_${i}`]  !== undefined ? saved[`actual_${i}`]  : '';
+    const conv    = saved[`conv_${i}`]    !== undefined ? saved[`conv_${i}`]    : '';
+    const note    = saved[`note_${i}`]    !== undefined ? saved[`note_${i}`]    : '';
+    const wbName  = saved[`name_${i}`]    !== undefined ? saved[`name_${i}`]    : d.name;
+    const partner = saved[`partner_${i}`] !== undefined ? saved[`partner_${i}`] : d.partner;
+    const target  = saved[`target_${i}`]  !== undefined ? saved[`target_${i}`]  : d.target;
     return `<div class="card webinar-card">
       <div class="date">
         <div style="font-size:10px">${d.month}</div>
@@ -1447,10 +1462,13 @@ function renderWebinars() {
         <div style="font-size:10px">開催</div>
       </div>
       <div>
-        <h4>${d.name}</h4>
-        <div class="partner">共催：${d.partner}</div>
+        <h4><input class="editable" value="${wbName}" style="font-size:13px;font-weight:700;width:100%;max-width:360px"
+          oninput="saveWebinar('name_${i}',this.value)"></h4>
+        <div class="partner">共催：<input class="editable" value="${partner}" style="font-size:11px;width:140px"
+          oninput="saveWebinar('partner_${i}',this.value)"></div>
         <div style="margin-top:8px;font-size:11px;display:flex;gap:16px;align-items:center;flex-wrap:wrap">
-          <span>参加目標：<strong>${d.target}名</strong></span>
+          <span style="display:inline-flex;align-items:center;gap:4px">参加目標：<input type="number" class="wb-num-input" value="${target}" placeholder="30" min="0"
+            oninput="saveWebinar('target_${i}',this.value)">名</span>
           <span style="display:inline-flex;align-items:center;gap:4px">実績：<input type="number" class="wb-num-input" value="${actual}" placeholder="0" min="0"
             oninput="saveWebinar('actual_${i}',this.value)">名</span>
           <span style="display:inline-flex;align-items:center;gap:4px">商談転換：<input type="number" class="wb-num-input" value="${conv}" placeholder="0" min="0"
@@ -1713,6 +1731,32 @@ function renderDashboardSchedule() {
 }
 
 // ═══════════════════════════════════════════
+// DASHBOARD: KPI CARDS (編集可能)
+// ═══════════════════════════════════════════
+function saveDashKPI(key, val) {
+  const data = load('dash_kpis', {});
+  data[key] = val;
+  save('dash_kpis', data);
+}
+
+function initDashboardKPIs() {
+  const data = load('dash_kpis', {});
+  const defaults = {
+    'kpi-meetings': '211',
+    'kpi-orders':   '39',
+    'kpi-yt-count': '6',
+    'kpi-wb-count': '4',
+    'kpi-target':   '300-500万',
+  };
+  Object.entries(defaults).forEach(([id, def]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.value = data[id] !== undefined ? data[id] : def;
+    el.addEventListener('input', () => saveDashKPI(id, el.value));
+  });
+}
+
+// ═══════════════════════════════════════════
 // LEAD DATA SEED (Numbers file 2026-07-01)
 // チャネル別商談実施件数：6月・7月
 // channels index: 0=リファラル 1=交流会 2=YouTube 3=お問い合わせ 4=書籍 5=SNS 6=セミナー
@@ -1744,6 +1788,7 @@ renderCases();
 renderShorts();
 renderWebinars();
 initMemo();
+initDashboardKPIs();
 renderDashboardMonthly();
 renderDashboardSchedule();
 
