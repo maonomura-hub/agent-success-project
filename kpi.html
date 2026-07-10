@@ -268,6 +268,36 @@ td.num{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
 .monthly-compare input.dash-cell-input:focus{border-bottom-color:var(--accent);background:rgba(255,255,255,.6)}
 .monthly-compare input.dash-cell-input::placeholder{color:#bbb}
 
+/* 実数/目標 2段入力セル */
+.cell-pair{display:flex;flex-direction:column;align-items:center;gap:1px}
+.cell-pair-label{font-size:8.5px;color:var(--txg);line-height:1;user-select:none}
+.cell-pair-label.lbl-target{color:var(--orange)}
+input.cell-actual{
+  width:38px;background:transparent;border:none;border-bottom:1.5px solid var(--accent);
+  text-align:center;font-size:11px;font-family:inherit;color:var(--navy);
+  padding:2px 1px;outline:none;border-radius:0;transition:border-color .15s;
+}
+input.cell-actual:hover{border-bottom-color:#0055a0}
+input.cell-actual:focus{border-bottom-color:#0055a0;background:rgba(255,255,255,.7)}
+input.cell-actual::placeholder{color:#ccc}
+input.cell-target{
+  width:38px;background:transparent;border:none;border-bottom:1.5px dashed var(--orange);
+  text-align:center;font-size:10px;font-family:inherit;color:var(--orange);
+  padding:2px 1px;outline:none;border-radius:0;transition:border-color .15s;
+}
+input.cell-target:hover{border-bottom-color:#c06000}
+input.cell-target:focus{border-bottom-color:#c06000;background:rgba(255,255,255,.7)}
+input.cell-target::placeholder{color:#f0c080}
+.monthly-compare th.th-future{
+  background:var(--navy);position:relative;
+}
+.monthly-compare th.th-future::after{
+  content:'実/目';font-size:8px;font-weight:400;opacity:.7;
+  display:block;margin-top:1px;letter-spacing:0;
+}
+.monthly-compare .total-row .cell-pair .total-actual{font-size:11px;font-weight:800;color:var(--accent)}
+.monthly-compare .total-row .cell-pair .total-target{font-size:10px;color:var(--orange)}
+
 /* Hide number spinners on small inline inputs */
 input[type=number].monthly-input::-webkit-inner-spin-button,
 input[type=number].monthly-input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
@@ -275,6 +305,12 @@ input[type=number].monthly-input{-moz-appearance:textfield}
 input[type=number].dash-cell-input::-webkit-inner-spin-button,
 input[type=number].dash-cell-input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 input[type=number].dash-cell-input{-moz-appearance:textfield}
+input[type=number].cell-actual::-webkit-inner-spin-button,
+input[type=number].cell-actual::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+input[type=number].cell-actual{-moz-appearance:textfield}
+input[type=number].cell-target::-webkit-inner-spin-button,
+input[type=number].cell-target::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+input[type=number].cell-target{-moz-appearance:textfield}
 
 /* KPI Card Inline Inputs */
 .kpi-input{
@@ -580,8 +616,13 @@ input[type=number].wb-num-input{-moz-appearance:textfield}
     <table id="monthly-table">
       <thead><tr>
         <th>チャネル</th>
-        <th class="center">6月</th><th class="center">7月</th><th class="center">8月</th>
-        <th class="center">9月</th><th class="center">10月</th><th class="center">11月</th><th class="center">12月</th>
+        <th class="center">6月</th>
+        <th class="center" style="min-width:62px">7月<br><span style="font-size:8.5px;font-weight:400;opacity:.8">実績 / 目標</span></th>
+        <th class="center" style="min-width:62px">8月<br><span style="font-size:8.5px;font-weight:400;opacity:.8">実績 / 目標</span></th>
+        <th class="center" style="min-width:62px">9月<br><span style="font-size:8.5px;font-weight:400;opacity:.8">実績 / 目標</span></th>
+        <th class="center" style="min-width:62px">10月<br><span style="font-size:8.5px;font-weight:400;opacity:.8">実績 / 目標</span></th>
+        <th class="center" style="min-width:62px">11月<br><span style="font-size:8.5px;font-weight:400;opacity:.8">実績 / 目標</span></th>
+        <th class="center" style="min-width:62px">12月<br><span style="font-size:8.5px;font-weight:400;opacity:.8">実績 / 目標</span></th>
       </tr></thead>
       <tbody id="monthly-body"></tbody>
     </table>
@@ -1052,61 +1093,102 @@ const months = ['6月','7月','8月','9月','10月','11月','12月'];
 function renderMonthly() {
   const data = load('monthly', {});
   const tb = document.getElementById('monthly-body');
-  tb.innerHTML = channels.map((ch, ci) => {
+
+  // チャネル行
+  let html = channels.map((ch, ci) => {
     const row = months.map((m, mi) => {
-      const key = `${ci}_${mi}`;
-      const val = (data[key] || '');
-      return `<td class="center"><input type="number" class="monthly-input" value="${val}"
-        oninput="saveMonthly(${ci},${mi},this.value)" placeholder="-" min="0"></td>`;
+      const val = data[`${ci}_${mi}`] || '';
+      if (mi === 0) {
+        // 6月：実数のみ
+        return `<td class="center"><input type="number" class="monthly-input" value="${val}"
+          oninput="saveMonthly(${ci},${mi},this.value,false)" placeholder="-" min="0"></td>`;
+      } else {
+        // 7月以降：実数＋目標
+        const tval = data[`${ci}_${mi}_t`] || '';
+        return `<td class="center" style="vertical-align:middle;padding:3px 4px">
+          <div class="cell-pair">
+            <span class="cell-pair-label">実績</span>
+            <input type="number" class="cell-actual" value="${val}"
+              oninput="saveMonthly(${ci},${mi},this.value,false)" placeholder="-" min="0">
+            <span class="cell-pair-label lbl-target">目標</span>
+            <input type="number" class="cell-target" value="${tval}"
+              oninput="saveMonthly(${ci},${mi},this.value,true)" placeholder="-" min="0">
+          </div></td>`;
+      }
     }).join('');
     const bg = ci % 2 === 0 ? 'background:#FAFBFD' : '';
     return `<tr style="${bg}"><td style="font-weight:600">${ch}</td>${row}</tr>`;
-  }).join('') +
-  `<tr style="background:var(--lt-navy)"><td style="font-weight:800;color:var(--accent)">合計</td>
-    ${months.map((_,mi) => `<td class="center" id="total-${mi}" style="font-weight:800;color:var(--accent)">-</td>`).join('')}
-  </tr>`;
+  }).join('');
+
+  // 合計行
+  html += `<tr style="background:var(--lt-navy)"><td style="font-weight:800;color:var(--accent)">合計</td>`;
+  months.forEach((_, mi) => {
+    if (mi === 0) {
+      html += `<td class="center" id="total-${mi}" style="font-weight:800;color:var(--accent)">-</td>`;
+    } else {
+      html += `<td class="center" style="padding:4px 4px">
+        <div class="cell-pair">
+          <span id="total-${mi}" style="font-size:11px;font-weight:800;color:var(--accent)">-</span>
+          <span id="total-${mi}-t" style="font-size:10px;color:var(--orange)">-</span>
+        </div></td>`;
+    }
+  });
+  html += '</tr>';
+  tb.innerHTML = html;
   updateTotals(data);
 }
 
-function saveMonthly(ci, mi, val) {
+function saveMonthly(ci, mi, val, isTarget) {
   const data = load('monthly', {});
   const trimmed = val.toString().trim();
-  if (trimmed === '') {
-    delete data[`${ci}_${mi}`];
-  } else {
-    data[`${ci}_${mi}`] = trimmed;
-  }
+  const key = isTarget ? `${ci}_${mi}_t` : `${ci}_${mi}`;
+  if (trimmed === '') { delete data[key]; } else { data[key] = trimmed; }
   save('monthly', data);
   updateTotals(data);
 
-  // ダッシュボード側の該当 input と合計行を個別更新（全再描画を避ける）
+  // ダッシュボード側を同期
   const dashContainer = document.getElementById('dashboard-monthly-compare');
   if (dashContainer && dashContainer.querySelector('table')) {
-    // 入力欄を同期
     const dashRows = dashContainer.querySelectorAll('tbody tr');
     if (dashRows[ci]) {
-      const inputs = dashRows[ci].querySelectorAll('input.dash-cell-input');
-      if (inputs[mi]) inputs[mi].value = trimmed;
+      const inputs = dashRows[ci].querySelectorAll(isTarget ? 'input.cell-target' : (mi===0?'input.monthly-input':'input.cell-actual'));
+      if (inputs[mi === 0 ? 0 : mi - 1]) inputs[mi === 0 ? 0 : mi - 1].value = trimmed;
     }
-    // 合計行を更新
-    months.forEach((_, mIdx) => {
-      let sum = 0;
-      channels.forEach((_, cIdx) => { sum += parseInt(data[`${cIdx}_${mIdx}`]||0)||0; });
-      const el = document.getElementById(`dash-total-${mIdx}`);
-      if (el) el.textContent = sum > 0 ? sum + '件' : '-';
-    });
+    updateDashTotals(data);
   } else {
-    // テーブルがまだ描画されていない場合は初回描画
     renderDashboardMonthly();
   }
 }
 
 function updateTotals(data) {
   months.forEach((_, mi) => {
-    let sum = 0;
-    channels.forEach((_, ci) => { sum += parseInt(data[`${ci}_${mi}`] || 0) || 0; });
-    const el = document.getElementById('total-' + mi);
-    if (el) el.textContent = sum > 0 ? sum + '件' : '-';
+    let sumA = 0, sumT = 0;
+    channels.forEach((_, ci) => {
+      sumA += parseInt(data[`${ci}_${mi}`] || 0) || 0;
+      sumT += parseInt(data[`${ci}_${mi}_t`] || 0) || 0;
+    });
+    const elA = document.getElementById('total-' + mi);
+    if (elA) elA.textContent = sumA > 0 ? sumA + '件' : '-';
+    if (mi > 0) {
+      const elT = document.getElementById(`total-${mi}-t`);
+      if (elT) elT.textContent = sumT > 0 ? '目標' + sumT + '件' : '-';
+    }
+  });
+}
+
+function updateDashTotals(data) {
+  months.forEach((_, mi) => {
+    let sumA = 0, sumT = 0;
+    channels.forEach((_, ci) => {
+      sumA += parseInt(data[`${ci}_${mi}`]||0)||0;
+      sumT += parseInt(data[`${ci}_${mi}_t`]||0)||0;
+    });
+    const elA = document.getElementById(`dash-total-${mi}`);
+    if (elA) elA.textContent = sumA > 0 ? sumA + '件' : '-';
+    if (mi > 0) {
+      const elT = document.getElementById(`dash-total-${mi}-t`);
+      if (elT) elT.textContent = sumT > 0 ? '目標' + sumT + '件' : '-';
+    }
   });
 }
 
@@ -1707,63 +1789,91 @@ function renderDashboardMonthly() {
   const container = document.getElementById('dashboard-monthly-compare');
   if (!container) return;
 
-  // Build editable table (always shown)
   let html = '<table class="monthly-compare" style="width:100%;border-collapse:collapse">';
-  html += '<thead><tr><th style="text-align:left">チャネル</th>';
-  months.forEach(m => { html += `<th>${m}</th>`; });
+  html += '<thead><tr><th style="text-align:left;min-width:90px">チャネル</th>';
+  months.forEach((m, mi) => {
+    if (mi === 0) {
+      html += `<th>${m}</th>`;
+    } else {
+      html += `<th class="th-future" style="min-width:70px">${m}</th>`;
+    }
+  });
   html += '</tr></thead><tbody>';
 
   channels.forEach((ch, ci) => {
     html += `<tr><td>${ch}</td>`;
     months.forEach((_, mi) => {
       const val = data[`${ci}_${mi}`] || '';
-      html += `<td><input type="number" class="dash-cell-input"
-        value="${val}" placeholder="-" min="0"
-        oninput="saveDashboardMonthly(${ci},${mi},this.value)"></td>`;
+      if (mi === 0) {
+        // 6月：実数のみ
+        html += `<td><input type="number" class="dash-cell-input"
+          value="${val}" placeholder="-" min="0"
+          oninput="saveDashboardMonthly(${ci},${mi},this.value,false)"></td>`;
+      } else {
+        // 7月以降：実数＋目標
+        const tval = data[`${ci}_${mi}_t`] || '';
+        html += `<td style="padding:3px 4px;vertical-align:middle">
+          <div class="cell-pair">
+            <span class="cell-pair-label">実績</span>
+            <input type="number" class="cell-actual"
+              value="${val}" placeholder="-" min="0"
+              oninput="saveDashboardMonthly(${ci},${mi},this.value,false)">
+            <span class="cell-pair-label lbl-target">目標</span>
+            <input type="number" class="cell-target"
+              value="${tval}" placeholder="-" min="0"
+              oninput="saveDashboardMonthly(${ci},${mi},this.value,true)">
+          </div></td>`;
+      }
     });
     html += '</tr>';
   });
 
-  // Totals row (static cells with IDs, auto-updated)
+  // 合計行
   html += '<tr class="total-row"><td>合計</td>';
   months.forEach((_, mi) => {
-    let sum = 0;
-    channels.forEach((_, ci) => { sum += parseInt(data[`${ci}_${mi}`]||0)||0; });
-    html += `<td id="dash-total-${mi}">${sum > 0 ? sum + '件' : '-'}</td>`;
+    let sumA = 0, sumT = 0;
+    channels.forEach((_, ci) => {
+      sumA += parseInt(data[`${ci}_${mi}`]||0)||0;
+      sumT += parseInt(data[`${ci}_${mi}_t`]||0)||0;
+    });
+    if (mi === 0) {
+      html += `<td id="dash-total-${mi}">${sumA > 0 ? sumA + '件' : '-'}</td>`;
+    } else {
+      html += `<td style="padding:4px 4px">
+        <div class="cell-pair">
+          <span id="dash-total-${mi}" style="font-size:11px;font-weight:800;color:var(--accent)">${sumA > 0 ? sumA + '件' : '-'}</span>
+          <span id="dash-total-${mi}-t" style="font-size:10px;color:var(--orange)">${sumT > 0 ? '目標' + sumT + '件' : '-'}</span>
+        </div></td>`;
+    }
   });
-  html += '</tr>';
-  html += '</tbody></table>';
+  html += '</tr></tbody></table>';
   container.innerHTML = html;
 }
 
-function saveDashboardMonthly(ci, mi, val) {
+function saveDashboardMonthly(ci, mi, val, isTarget) {
   const data = load('monthly', {});
   const trimmed = val.toString().trim();
-  if (trimmed === '' || trimmed === null) {
-    delete data[`${ci}_${mi}`];
-  } else {
-    data[`${ci}_${mi}`] = trimmed;
-  }
+  const key = isTarget ? `${ci}_${mi}_t` : `${ci}_${mi}`;
+  if (trimmed === '') { delete data[key]; } else { data[key] = trimmed; }
   save('monthly', data);
 
   // ダッシュボード合計行を更新
-  months.forEach((_, mIdx) => {
-    let sum = 0;
-    channels.forEach((_, cIdx) => { sum += parseInt(data[`${cIdx}_${mIdx}`]||0)||0; });
-    const el = document.getElementById(`dash-total-${mIdx}`);
-    if (el) el.textContent = sum > 0 ? sum + '件' : '-';
-  });
+  updateDashTotals(data);
 
   // チャネルKPIタブ側の合計行も更新
   updateTotals(data);
 
-  // チャネルKPIタブの該当セルの input 値も同期
+  // チャネルKPIタブの該当セル input 値も同期
   const tb = document.getElementById('monthly-body');
   if (tb) {
     const rows = tb.querySelectorAll('tr');
     if (rows[ci]) {
-      const inputs = rows[ci].querySelectorAll('input');
-      if (inputs[mi]) inputs[mi].value = trimmed;
+      const sel = mi === 0
+        ? 'input.monthly-input'
+        : (isTarget ? 'input.cell-target' : 'input.cell-actual');
+      const inputs = rows[ci].querySelectorAll(sel);
+      const idx = mi === 0 ? 0 : mi - 1;
+      if (inputs[idx]) inputs[idx].value = trimmed;
     }
   }
 }
