@@ -483,6 +483,11 @@ input[type=number].wb-num-input{-moz-appearance:textfield}
   </div>
 
   <div class="card" style="margin-top:0">
+    <div class="card-title">📈 チャネル別 伸び率トレンド <span style="font-size:10px;font-weight:400;color:var(--txg);margin-left:8px">— 月次実績 vs 目標</span></div>
+    <div id="growth-rates-container"></div>
+  </div>
+
+  <div class="card" style="margin-top:0">
     <div class="card-title">📌 今週のトピック <span style="font-size:10px;font-weight:400;color:var(--txg);margin-left:8px">— 毎週更新</span></div>
     <div id="weekly-topics-wrap" style="display:grid;grid-template-columns:1fr 1fr;gap:12px"></div>
   </div>
@@ -1160,6 +1165,7 @@ function saveMonthly(ci, mi, val, isTarget) {
   if (trimmed === '') { delete data[key]; } else { data[key] = trimmed; }
   save('monthly', data);
   updateTotals(data);
+  renderGrowthRates();
 
   // ダッシュボード側を同期
   const dashContainer = document.getElementById('dashboard-monthly-compare');
@@ -1891,6 +1897,7 @@ function saveDashboardMonthly(ci, mi, val, isTarget) {
       if (inputs[idx]) inputs[idx].value = trimmed;
     }
   }
+  renderGrowthRates();
 }
 
 // ═══════════════════════════════════════════
@@ -2039,6 +2046,107 @@ function saveWeeklyTopic(key, val) {
 }
 
 // ═══════════════════════════════════════════
+// GROWTH RATE CHART
+// ═══════════════════════════════════════════
+function renderGrowthRates() {
+  const data = load('monthly', {});
+  const container = document.getElementById('growth-rates-container');
+  if (!container) return;
+
+  // 全データ中の最大値（バー高さスケール用）
+  let maxVal = 1;
+  channels.forEach((_, ci) => {
+    months.forEach((_, mi) => {
+      maxVal = Math.max(maxVal,
+        parseInt(data[`${ci}_${mi}`]   || 0) || 0,
+        parseInt(data[`${ci}_${mi}_t`] || 0) || 0);
+    });
+  });
+
+  const rows = channels.map((ch, ci) => {
+    const actuals = months.map((_, mi) => parseInt(data[`${ci}_${mi}`]   || 0) || 0);
+    const targets = months.map((_, mi) => parseInt(data[`${ci}_${mi}_t`] || 0) || 0);
+
+    // 前月比（実績が2ヶ月以上ある場合）
+    let momHtml = '<div style="min-width:58px"></div>';
+    for (let mi = months.length - 1; mi >= 1; mi--) {
+      if (actuals[mi] > 0 && actuals[mi - 1] > 0) {
+        const pct = Math.round((actuals[mi] - actuals[mi - 1]) / actuals[mi - 1] * 100);
+        const col = pct > 0 ? 'var(--green)' : pct < 0 ? 'var(--red)' : 'var(--txg)';
+        const arrow = pct > 0 ? '↑' : pct < 0 ? '↓' : '→';
+        momHtml = `<div style="min-width:58px;font-size:11px;font-weight:800;color:${col};text-align:right;white-space:nowrap">${pct > 0 ? '+' : ''}${pct}%${arrow}</div>`;
+        break;
+      }
+    }
+
+    // 月別ミニバー
+    const bars = months.map((m, mi) => {
+      const a = actuals[mi], t = targets[mi];
+      const aPct = Math.round(a / maxVal * 100);
+      const tPct = Math.round(t / maxVal * 100);
+
+      let barColor = 'var(--accent)';
+      let label = '-';
+      if (a > 0 && t > 0) {
+        const rate = Math.round(a / t * 100);
+        barColor = rate >= 100 ? 'var(--green)' : rate >= 70 ? 'var(--accent)' : rate >= 40 ? 'var(--orange)' : 'var(--red)';
+        label = `${rate}%`;
+      } else if (a > 0) {
+        label = `${a}件`;
+        barColor = 'var(--accent)';
+      } else if (t > 0) {
+        label = `目標${t}`;
+        barColor = 'var(--txg)';
+      }
+
+      return `<div style="flex:1;min-width:48px;text-align:center">
+        <div style="font-size:9px;color:var(--txg);margin-bottom:3px;font-weight:600">${m}</div>
+        <div style="position:relative;height:38px;background:#F0F4F8;border-radius:4px;overflow:visible">
+          ${t > 0 ? `<div style="position:absolute;bottom:0;left:0;right:0;height:${tPct}%;background:rgba(201,106,0,.13);border-top:1.5px dashed var(--orange);border-radius:3px 3px 0 0"></div>` : ''}
+          ${a > 0 ? `<div style="position:absolute;bottom:0;left:1px;right:1px;height:${aPct}%;background:${barColor};opacity:.82;border-radius:3px 3px 0 0;transition:height .3s"></div>` : ''}
+        </div>
+        <div style="font-size:9px;margin-top:2px;font-weight:700;color:${a>0||t>0?barColor:'var(--txg)'}">${label}</div>
+      </div>`;
+    }).join('');
+
+    // 合計実績（そのチャネルの全月合計）
+    const totalA = actuals.reduce((s,v)=>s+v,0);
+    const totalT = targets.reduce((s,v)=>s+v,0);
+    const totalRate = totalT > 0 ? Math.round(totalA / totalT * 100) : null;
+    const totalCol = totalRate === null ? 'var(--txg)' : totalRate >= 100 ? 'var(--green)' : totalRate >= 70 ? 'var(--accent)' : 'var(--orange)';
+    const totalLabel = totalRate !== null ? `累計 ${totalRate}%` : totalA > 0 ? `累計 ${totalA}件` : '—';
+
+    return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)">
+      <div style="min-width:86px;font-size:11px;font-weight:700;color:var(--tx);flex-shrink:0">${ch}</div>
+      <div style="display:flex;gap:5px;flex:1">${bars}</div>
+      <div style="min-width:52px;text-align:right;font-size:10px;font-weight:700;color:${totalCol};flex-shrink:0">${totalLabel}</div>
+      ${momHtml}
+    </div>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div style="display:flex;gap:14px;font-size:9.5px;color:var(--txg);margin-bottom:10px;align-items:center;flex-wrap:wrap">
+      <span style="display:inline-flex;align-items:center;gap:4px">
+        <span style="display:inline-block;width:14px;height:10px;background:var(--accent);border-radius:2px;opacity:.82"></span>実績
+      </span>
+      <span style="display:inline-flex;align-items:center;gap:4px">
+        <span style="display:inline-block;width:14px;height:10px;background:rgba(201,106,0,.18);border-top:1.5px dashed var(--orange)"></span>目標
+      </span>
+      <span style="display:inline-flex;align-items:center;gap:4px">
+        <span style="display:inline-block;width:10px;height:10px;background:var(--green);border-radius:2px;opacity:.82"></span>達成≥100%
+      </span>
+      <span style="display:inline-flex;align-items:center;gap:4px">
+        <span style="display:inline-block;width:10px;height:10px;background:var(--orange);border-radius:2px;opacity:.82"></span>達成40〜99%
+      </span>
+      <span style="display:inline-flex;align-items:center;gap:4px">
+        <span style="display:inline-block;width:10px;height:10px;background:var(--red);border-radius:2px;opacity:.82"></span>達成&lt;40%
+      </span>
+      <span style="margin-left:auto;font-size:9px">最右：前月比（実績のある月間）</span>
+    </div>
+    ${rows}`;
+}
+
+// ═══════════════════════════════════════════
 // MIGRATION: 実績データ → 目標データへ移行（7月以降）
 // ═══════════════════════════════════════════
 (function migrateActualToTarget() {
@@ -2099,6 +2207,7 @@ renderWebinarSummary();
 initMemo();
 initDashboardKPIs();
 renderDashboardMonthly();
+renderGrowthRates();
 renderDashboardSchedule();
 
 // Update dashboard monthly when monthly data is saved
