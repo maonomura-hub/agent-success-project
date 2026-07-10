@@ -268,12 +268,14 @@ td.num{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
 .monthly-compare input.dash-cell-input:focus{border-bottom-color:var(--accent);background:rgba(255,255,255,.6)}
 .monthly-compare input.dash-cell-input::placeholder{color:#bbb}
 
-/* 実数/目標 2段入力セル */
-.cell-pair{display:flex;flex-direction:column;align-items:center;gap:1px}
-.cell-pair-label{font-size:8.5px;color:var(--txg);line-height:1;user-select:none}
+/* 実数/目標 横並び入力セル */
+.cell-pair{display:flex;flex-direction:row;align-items:center;gap:3px}
+.cell-col{display:flex;flex-direction:column;align-items:center;gap:1px;flex:1}
+.cell-col-sep{width:1px;height:26px;background:var(--border);flex-shrink:0}
+.cell-pair-label{font-size:8px;color:var(--txg);line-height:1;user-select:none;white-space:nowrap}
 .cell-pair-label.lbl-target{color:var(--orange)}
 input.cell-actual{
-  width:38px;background:transparent;border:none;border-bottom:1.5px solid var(--accent);
+  width:34px;background:transparent;border:none;border-bottom:1.5px solid var(--accent);
   text-align:center;font-size:11px;font-family:inherit;color:var(--navy);
   padding:2px 1px;outline:none;border-radius:0;transition:border-color .15s;
 }
@@ -281,8 +283,8 @@ input.cell-actual:hover{border-bottom-color:#0055a0}
 input.cell-actual:focus{border-bottom-color:#0055a0;background:rgba(255,255,255,.7)}
 input.cell-actual::placeholder{color:#ccc}
 input.cell-target{
-  width:38px;background:transparent;border:none;border-bottom:1.5px dashed var(--orange);
-  text-align:center;font-size:10px;font-family:inherit;color:var(--orange);
+  width:34px;background:transparent;border:none;border-bottom:1.5px dashed var(--orange);
+  text-align:center;font-size:11px;font-family:inherit;color:var(--orange);
   padding:2px 1px;outline:none;border-radius:0;transition:border-color .15s;
 }
 input.cell-target:hover{border-bottom-color:#c06000}
@@ -1123,16 +1125,21 @@ function renderMonthly() {
         return `<td class="center"><input type="number" class="monthly-input" value="${val}"
           oninput="saveMonthly(${ci},${mi},this.value,false)" placeholder="-" min="0"></td>`;
       } else {
-        // 7月以降：実数＋目標
+        // 7月以降：実績 | 目標 横並び
         const tval = data[`${ci}_${mi}_t`] || '';
         return `<td class="center" style="vertical-align:middle;padding:3px 4px">
           <div class="cell-pair">
-            <span class="cell-pair-label">実績</span>
-            <input type="number" class="cell-actual" value="${val}"
-              oninput="saveMonthly(${ci},${mi},this.value,false)" placeholder="-" min="0">
-            <span class="cell-pair-label lbl-target">目標</span>
-            <input type="number" class="cell-target" value="${tval}"
-              oninput="saveMonthly(${ci},${mi},this.value,true)" placeholder="-" min="0">
+            <div class="cell-col">
+              <span class="cell-pair-label">実績</span>
+              <input type="number" class="cell-actual" value="${val}"
+                oninput="saveMonthly(${ci},${mi},this.value,false)" placeholder="-" min="0">
+            </div>
+            <div class="cell-col-sep"></div>
+            <div class="cell-col">
+              <span class="cell-pair-label lbl-target">目標</span>
+              <input type="number" class="cell-target" value="${tval}"
+                oninput="saveMonthly(${ci},${mi},this.value,true)" placeholder="-" min="0">
+            </div>
           </div></td>`;
       }
     }).join('');
@@ -1148,8 +1155,15 @@ function renderMonthly() {
     } else {
       html += `<td class="center" style="padding:4px 4px">
         <div class="cell-pair">
-          <span id="total-${mi}" style="font-size:11px;font-weight:800;color:var(--accent)">-</span>
-          <span id="total-${mi}-t" style="font-size:10px;color:var(--orange)">-</span>
+          <div class="cell-col">
+            <span class="cell-pair-label" style="color:var(--accent)">実</span>
+            <span id="total-${mi}" style="font-size:11px;font-weight:800;color:var(--accent)">-</span>
+          </div>
+          <div class="cell-col-sep"></div>
+          <div class="cell-col">
+            <span class="cell-pair-label lbl-target">目</span>
+            <span id="total-${mi}-t" style="font-size:10px;font-weight:700;color:var(--orange)">-</span>
+          </div>
         </div></td>`;
     }
   });
@@ -1192,7 +1206,7 @@ function updateTotals(data) {
     if (elA) elA.textContent = sumA > 0 ? sumA + '件' : '-';
     if (mi > 0) {
       const elT = document.getElementById(`total-${mi}-t`);
-      if (elT) elT.textContent = sumT > 0 ? '目標' + sumT + '件' : '-';
+      if (elT) elT.textContent = sumT > 0 ? sumT + '件' : '-';
     }
   });
 }
@@ -1208,7 +1222,7 @@ function updateDashTotals(data) {
     if (elA) elA.textContent = sumA > 0 ? sumA + '件' : '-';
     if (mi > 0) {
       const elT = document.getElementById(`dash-total-${mi}-t`);
-      if (elT) elT.textContent = sumT > 0 ? '目標' + sumT + '件' : '-';
+      if (elT) elT.textContent = sumT > 0 ? sumT + '件' : '-';
     }
   });
 }
@@ -1831,18 +1845,23 @@ function renderDashboardMonthly() {
           value="${val}" placeholder="-" min="0"
           oninput="saveDashboardMonthly(${ci},${mi},this.value,false)"></td>`;
       } else {
-        // 7月以降：実数＋目標
+        // 7月以降：実績 | 目標 横並び
         const tval = data[`${ci}_${mi}_t`] || '';
         html += `<td style="padding:3px 4px;vertical-align:middle">
           <div class="cell-pair">
-            <span class="cell-pair-label">実績</span>
-            <input type="number" class="cell-actual"
-              value="${val}" placeholder="-" min="0"
-              oninput="saveDashboardMonthly(${ci},${mi},this.value,false)">
-            <span class="cell-pair-label lbl-target">目標</span>
-            <input type="number" class="cell-target"
-              value="${tval}" placeholder="-" min="0"
-              oninput="saveDashboardMonthly(${ci},${mi},this.value,true)">
+            <div class="cell-col">
+              <span class="cell-pair-label">実績</span>
+              <input type="number" class="cell-actual"
+                value="${val}" placeholder="-" min="0"
+                oninput="saveDashboardMonthly(${ci},${mi},this.value,false)">
+            </div>
+            <div class="cell-col-sep"></div>
+            <div class="cell-col">
+              <span class="cell-pair-label lbl-target">目標</span>
+              <input type="number" class="cell-target"
+                value="${tval}" placeholder="-" min="0"
+                oninput="saveDashboardMonthly(${ci},${mi},this.value,true)">
+            </div>
           </div></td>`;
       }
     });
@@ -1862,8 +1881,15 @@ function renderDashboardMonthly() {
     } else {
       html += `<td style="padding:4px 4px">
         <div class="cell-pair">
-          <span id="dash-total-${mi}" style="font-size:11px;font-weight:800;color:var(--accent)">${sumA > 0 ? sumA + '件' : '-'}</span>
-          <span id="dash-total-${mi}-t" style="font-size:10px;color:var(--orange)">${sumT > 0 ? '目標' + sumT + '件' : '-'}</span>
+          <div class="cell-col">
+            <span class="cell-pair-label" style="color:var(--accent)">実</span>
+            <span id="dash-total-${mi}" style="font-size:11px;font-weight:800;color:var(--accent)">${sumA > 0 ? sumA + '件' : '-'}</span>
+          </div>
+          <div class="cell-col-sep"></div>
+          <div class="cell-col">
+            <span class="cell-pair-label lbl-target">目</span>
+            <span id="dash-total-${mi}-t" style="font-size:10px;font-weight:700;color:var(--orange)">${sumT > 0 ? sumT + '件' : '-'}</span>
+          </div>
         </div></td>`;
     }
   });
