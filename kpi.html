@@ -298,6 +298,19 @@ input.cell-target::placeholder{color:#f0c080}
 .monthly-compare .total-row .cell-pair .total-actual{font-size:11px;font-weight:800;color:var(--accent)}
 .monthly-compare .total-row .cell-pair .total-target{font-size:10px;color:var(--orange)}
 
+/* WEEKLY TOPICS */
+.weekly-topic-section{display:flex;flex-direction:column;gap:4px}
+.weekly-topic-label{font-size:11px;font-weight:700;color:var(--navy);
+  background:var(--lt-navy);border-radius:4px;padding:4px 8px;
+  border-left:3px solid var(--accent)}
+.weekly-topic-textarea{
+  width:100%;border:1px solid var(--border);border-radius:6px;
+  padding:8px 10px;font-size:11.5px;font-family:inherit;color:var(--tx);
+  resize:vertical;line-height:1.7;min-height:80px;
+  background:#FAFBFD;transition:.2s
+}
+.weekly-topic-textarea:focus{outline:none;border-color:var(--accent);background:#fff}
+
 /* Hide number spinners on small inline inputs */
 input[type=number].monthly-input::-webkit-inner-spin-button,
 input[type=number].monthly-input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
@@ -469,6 +482,11 @@ input[type=number].wb-num-input{-moz-appearance:textfield}
     </div>
   </div>
 
+  <div class="card" style="margin-top:0">
+    <div class="card-title">📌 今週のトピック <span style="font-size:10px;font-weight:400;color:var(--txg);margin-left:8px">— 毎週更新</span></div>
+    <div id="weekly-topics-wrap" style="display:grid;grid-template-columns:1fr 1fr;gap:12px"></div>
+  </div>
+
   <div class="card">
     <div class="card-title">集約スケジュール（直近のウェビナー＆YouTubeコラボ）</div>
     <div id="dashboard-schedule">
@@ -608,7 +626,7 @@ input[type=number].wb-num-input{-moz-appearance:textfield}
     <div class="csv-upload-area">
       <div style="flex:1">
         <p><strong style="color:var(--accent)">📊 CSVインポート</strong>　チャンネル名・各月の件数が入ったCSVをアップロードするとテーブルに反映されます。</p>
-        <p style="margin-top:3px">形式例：<code style="background:#fff;padding:1px 5px;border-radius:3px;font-size:10px">チャネル,6月,7月,8月,9月,10月,11月,12月</code></p>
+        <p style="margin-top:3px">形式例：<code style="background:#fff;padding:1px 5px;border-radius:3px;font-size:10px">チャネル,6月,7月,8月,9月</code></p>
       </div>
       <button class="btn-sm blue" onclick="triggerCSVUpload()">📂 CSVを選択</button>
     </div>
@@ -620,9 +638,6 @@ input[type=number].wb-num-input{-moz-appearance:textfield}
         <th class="center" style="min-width:62px">7月<br><span style="font-size:8.5px;font-weight:400;opacity:.8">実績 / 目標</span></th>
         <th class="center" style="min-width:62px">8月<br><span style="font-size:8.5px;font-weight:400;opacity:.8">実績 / 目標</span></th>
         <th class="center" style="min-width:62px">9月<br><span style="font-size:8.5px;font-weight:400;opacity:.8">実績 / 目標</span></th>
-        <th class="center" style="min-width:62px">10月<br><span style="font-size:8.5px;font-weight:400;opacity:.8">実績 / 目標</span></th>
-        <th class="center" style="min-width:62px">11月<br><span style="font-size:8.5px;font-weight:400;opacity:.8">実績 / 目標</span></th>
-        <th class="center" style="min-width:62px">12月<br><span style="font-size:8.5px;font-weight:400;opacity:.8">実績 / 目標</span></th>
       </tr></thead>
       <tbody id="monthly-body"></tbody>
     </table>
@@ -997,7 +1012,7 @@ function printPDF() {
 // BACKUP / RESTORE
 // ═══════════════════════════════════════════
 function exportBackup() {
-  const keys = ['monthly','yt','yt_extra','cases','shorts','webinars','webinar_extra','memo','dash_kpis'];
+  const keys = ['monthly','yt','yt_extra','cases','shorts','webinars','webinar_extra','memo','dash_kpis','weekly_topics'];
   const backup = { _version: 1, _date: new Date().toISOString() };
   keys.forEach(k => {
     const v = localStorage.getItem('as_kpi_' + k);
@@ -1024,7 +1039,7 @@ function handleRestore(event) {
   reader.onload = function(e) {
     try {
       const data = JSON.parse(e.target.result);
-      const keys = ['monthly','yt','yt_extra','cases','shorts','webinars','webinar_extra','memo','dash_kpis'];
+      const keys = ['monthly','yt','yt_extra','cases','shorts','webinars','webinar_extra','memo','dash_kpis','weekly_topics'];
       keys.forEach(k => {
         if (data[k] !== undefined) {
           localStorage.setItem('as_kpi_' + k, JSON.stringify(data[k]));
@@ -1088,7 +1103,7 @@ function renderBars() {
 // MONTHLY TABLE + CSV UPLOAD
 // ═══════════════════════════════════════════
 const channels = ['リファラル','交流会','YouTube','お問い合わせ','書籍','SNS','セミナー','CCHトスアップ'];
-const months = ['6月','7月','8月','9月','10月','11月','12月'];
+const months = ['6月','7月','8月','9月'];
 
 function renderMonthly() {
   const data = load('monthly', {});
@@ -1988,20 +2003,81 @@ function initDashboardKPIs() {
 }
 
 // ═══════════════════════════════════════════
-// LEAD DATA SEED (Numbers file 2026-07-01)
-// チャネル別商談実施件数：6月・7月
+// WEEKLY TOPICS
+// ═══════════════════════════════════════════
+const weeklyTopicKeys = ['営業','採用','業務提携','LP・広告','ウェビナー','Youtube'];
+const weeklyTopicDefaults = {
+  '営業': 'サービス料金の改定、営業ノウハウをマニュアル化し、７月中に正解を作る→８月以降は営業にたたずメンバーに任せる体制を作る',
+  '採用': '先週比＋業務委託２名が参画\n■デリバリー必要数\n・1人工→8案件想定\n・5人工を10月～\n■デリバリー候補者\n・デリバリー責任者候補 7/13会食口説き\n・フル候補10名 → 3名正社員で採用、残りは業務委託で回す\n■営業必要数\n・1人工→日々5件 再商談含めて6～7\n・2人工→10月～\n・CCHから1名 8月～\n・野村づての採用 8月～',
+  '業務提携': '業界でも知名度の高いRYOMAとの提携が進む\n・Youtubeコラボ→エージェントサクセスの広告配信→成果報酬でキックバック\n・RYOMAは０から４期で年収１０億に到達し、そのノウハウをYoutubeで発信。人材紹介立ち上げの相談が代表に毎月くるも捌けないため、エージェントサクセスに移管したい意向。\n・候補者集客から組織づくりまでのノウハウが溜まっており、そこの部分はエージェントサクセスがCSでも情報が欲しかったところで業務提携により取得予定。さらに権威性とサービスの質が向上する。',
+  'LP・広告': '内製化してLpを作成→外注せず広告を回してテストする',
+  'ウェビナー': '７月の集客目標がまだ達していない（８月分は見込み上は完了）\n・ウェビナーが乱立していて、見込んでいた参加者が来ないなどがあるため要改善 → セミナー参加後にすぐメールでアプローチして、アポ設定までは数を担保する動きでリカバリー中\n・また足りないところはオフラインイベントに参加して周知するという動きでカバー',
+  'Youtube': '内製化が完了し、昨日のショートも２５００回再生しているため初動としては順調',
+};
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function renderWeeklyTopics() {
+  const wrap = document.getElementById('weekly-topics-wrap');
+  if (!wrap) return;
+  const data = load('weekly_topics', {});
+  wrap.innerHTML = weeklyTopicKeys.map(key => {
+    const val = data[key] !== undefined ? data[key] : (weeklyTopicDefaults[key] || '');
+    const rows = Math.max(3, (val.match(/\n/g)||[]).length + 2);
+    return `<div class="weekly-topic-section">
+      <div class="weekly-topic-label">${key}</div>
+      <textarea class="weekly-topic-textarea" rows="${rows}"
+        oninput="saveWeeklyTopic('${key}',this.value)">${escapeHtml(val)}</textarea>
+    </div>`;
+  }).join('');
+}
+function saveWeeklyTopic(key, val) {
+  const data = load('weekly_topics', {});
+  data[key] = val;
+  save('weekly_topics', data);
+}
+
+// ═══════════════════════════════════════════
+// MIGRATION: 実績データ → 目標データへ移行（7月以降）
+// ═══════════════════════════════════════════
+(function migrateActualToTarget() {
+  const MIG_VER = 'move-actual-to-target-v1';
+  if (localStorage.getItem('as_kpi_mig_ver') === JSON.stringify(MIG_VER)) return;
+  const data = load('monthly', {});
+  const toAdd = {};
+  const toDel = [];
+  Object.keys(data).forEach(key => {
+    const m = key.match(/^(\d+)_(\d+)$/);
+    if (m && parseInt(m[2]) >= 1) { // 7月以降（mi >= 1）の実績を目標へ
+      toAdd[key + '_t'] = data[key];
+      toDel.push(key);
+    }
+  });
+  toDel.forEach(k => delete data[k]);
+  Object.assign(data, toAdd);
+  localStorage.setItem('as_kpi_monthly', JSON.stringify(data));
+  localStorage.setItem('as_kpi_mig_ver', JSON.stringify(MIG_VER));
+})();
+
+// ═══════════════════════════════════════════
+// LEAD DATA SEED (2026-07-10)
 // channels index: 0=リファラル 1=交流会 2=YouTube 3=お問い合わせ 4=書籍 5=SNS 6=セミナー
-// months  index: 0=6月 1=7月
+// months  index: 0=6月 1=7月 2=8月 3=9月
 // ═══════════════════════════════════════════
 (function applyLeadSeed() {
-  const VER = '2026-07-01-v1';
+  const VER = '2026-07-10-v1';
   if (localStorage.getItem('as_kpi_lead_seed_ver') === JSON.stringify(VER)) return;
   const data = load('monthly', {});
+  // 7月以降の実績キーを削除（目標として再設定するため）
+  Object.keys(data).forEach(key => {
+    if (key.match(/^\d+_[1-9]\d*$/) && !key.endsWith('_t')) delete data[key];
+  });
   const seed = {
-    // 6月: リファラル1・交流会3・お問い合わせ3・書籍4（オンリーストーリー3件は別集計）
+    // 6月実績: リファラル1・交流会3・お問い合わせ3・書籍4
     '0_0': '1', '1_0': '3', '3_0': '3', '4_0': '4',
-    // 7月: リファラル2・交流会1・お問い合わせ4・SNS1・セミナー2
-    '0_1': '2', '1_1': '1', '3_1': '4', '5_1': '1', '6_1': '2',
+    // 7月目標: リファラル2・交流会1・お問い合わせ4・SNS1・セミナー2
+    '0_1_t': '2', '1_1_t': '1', '3_1_t': '4', '5_1_t': '1', '6_1_t': '2',
   };
   Object.assign(data, seed);
   localStorage.setItem('as_kpi_monthly', JSON.stringify(data));
@@ -2013,6 +2089,7 @@ function initDashboardKPIs() {
 // ═══════════════════════════════════════════
 migrateWebinarExtra();
 renderBars();
+renderWeeklyTopics();
 renderMonthly();
 renderYT();
 renderCases();
