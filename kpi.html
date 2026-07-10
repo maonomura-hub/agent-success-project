@@ -513,7 +513,7 @@ input[type=number].wb-num-input{-moz-appearance:textfield}
   <div class="card" style="margin-top:0">
     <div class="card-title" style="display:flex;align-items:center;gap:10px">
       📈 SNS 週次伸び率トレンド
-      <span style="font-size:10px;font-weight:400;color:var(--txg)">— フォロワー数を週ごとに入力</span>
+      <span style="font-size:10px;font-weight:400;color:var(--txg)">— インプレッション数を週ごとに入力</span>
       <button class="btn-sm blue" style="margin-left:auto;font-size:10px;padding:3px 10px" onclick="addSNSWeek()">＋ 週追加</button>
     </div>
     <div id="sns-trend-container" style="overflow-x:auto"></div>
@@ -2151,7 +2151,7 @@ function renderSNSTrend() {
     const delBtn = wi >= SNS_WEEK_DEFAULT.length
       ? `<button class="sns-week-del" onclick="deleteSNSWeek(${wi})" title="削除">✕</button>`
       : '';
-    html += `<th style="min-width:90px">${label}<br><span style="font-size:9px;font-weight:400;opacity:.75">フォロワー</span>${delBtn}</th>`;
+    html += `<th style="min-width:90px">${label}<br><span style="font-size:9px;font-weight:400;opacity:.75">IMP</span>${delBtn}</th>`;
     if (wi < weeks.length - 1) {
       html += `<th style="min-width:56px;background:rgba(255,255,255,.12);font-size:9px;font-weight:400">前週比</th>`;
     }
@@ -2188,7 +2188,7 @@ function renderSNSTrend() {
   });
 
   html += '</tbody></table>';
-  html += '<p style="font-size:10px;color:var(--txg);margin-top:8px">※ フォロワー数を週ごとに入力すると前週比が自動計算されます。「＋週追加」で新しい週を追加できます。</p>';
+  html += '<p style="font-size:10px;color:var(--txg);margin-top:8px">※ インプレッション数を週ごとに入力すると前週比が自動計算されます。「＋週追加」で新しい週を追加できます。</p>';
   container.innerHTML = html;
 }
 
