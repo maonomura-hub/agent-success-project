@@ -497,7 +497,8 @@ input[type=number].wb-num-input{-moz-appearance:textfield}
           <tr><td>お問い合わせ</td><td class="center">69</td><td class="center">13</td><td class="num">18.8%</td><td><span class="badge badge-gray">△絞り込み</span></td></tr>
           <tr><td>書籍</td><td class="center">24</td><td class="center">2</td><td class="num" style="color:var(--orange)">8.3%</td><td><span class="badge badge-orange">△育成強化</span></td></tr>
           <tr><td>SNS</td><td class="center">15</td><td class="center">1</td><td class="num" style="color:var(--orange)">6.7%</td><td><span class="badge badge-orange">△育成中</span></td></tr>
-          <tr><td>セミナー</td><td class="center">20</td><td class="center">1</td><td class="num" style="color:var(--red)">5.0%</td><td><span class="badge badge-red">△ROI確認</span></td></tr>
+          <tr><td>ウェビナー</td><td class="center">20</td><td class="center">1</td><td class="num" style="color:var(--red)">5.0%</td><td><span class="badge badge-red">△ROI確認</span></td></tr>
+          <tr><td>登壇イベント</td><td class="center">-</td><td class="center">-</td><td class="num">-</td><td><span class="badge badge-gray">計測中</span></td></tr>
         </tbody>
       </table>
     </div>
@@ -639,7 +640,7 @@ input[type=number].wb-num-input{-moz-appearance:textfield}
           </td>
         </tr>
         <tr style="background:var(--lt-orange)">
-          <td>セミナー</td>
+          <td>ウェビナー</td>
           <td class="center">1-2件</td>
           <td class="center">2件</td>
           <td class="center">5.0%</td>
@@ -648,8 +649,23 @@ input[type=number].wb-num-input{-moz-appearance:textfield}
           <td>
             <ul class="action-list">
               <li>主催＋外部共催で月1回以上確保</li>
-              <li>セミナー後3日以内に個別提案メールを送付</li>
+              <li>ウェビナー後3日以内に個別提案メールを送付</li>
               <li>参加者アンケートで「今すぐ層」を特定しホット対応を優先</li>
+            </ul>
+          </td>
+        </tr>
+        <tr>
+          <td>登壇イベント</td>
+          <td class="center">-</td>
+          <td class="center">-</td>
+          <td class="center">-</td>
+          <td class="center">10%以上</td>
+          <td class="center"><span class="badge badge-gray">計測中</span></td>
+          <td>
+            <ul class="action-list">
+              <li>外部イベント・勉強会への登壇機会を月1回確保</li>
+              <li>登壇後に名刺交換・SNSフォローで接点を確保</li>
+              <li>登壇テーマをターゲット層のニーズに合わせて設計</li>
             </ul>
           </td>
         </tr>
@@ -1117,7 +1133,8 @@ const channelData = [
   {name:'お問い合わせ', meetings:69, orders:13, rate:18.8, color:'#216FBB'},
   {name:'書籍',        meetings:24, orders:2,  rate:8.3,  color:'#C96A00'},
   {name:'SNS',         meetings:15, orders:1,  rate:6.7,  color:'#C96A00'},
-  {name:'セミナー',    meetings:20, orders:1,  rate:5.0,  color:'#B00020'},
+  {name:'ウェビナー',  meetings:20, orders:1,  rate:5.0,  color:'#B00020'},
+  {name:'登壇イベント', meetings:0,  orders:0,  rate:0.0,  color:'#888888'},
   {name:'オンリーストーリー', meetings:17, orders:1, rate:5.9, color:'#B00020'},
 ];
 function renderBars() {
@@ -1139,7 +1156,7 @@ function renderBars() {
 // ═══════════════════════════════════════════
 // MONTHLY TABLE + CSV UPLOAD
 // ═══════════════════════════════════════════
-const channels = ['リファラル','交流会','YouTube','お問い合わせ','書籍','SNS','セミナー','CCHトスアップ'];
+const channels = ['リファラル','交流会','YouTube','お問い合わせ','書籍','SNS','ウェビナー','CCHトスアップ','登壇イベント'];
 const months = ['6月','7月','8月','9月'];
 
 function renderMonthly() {
@@ -2384,7 +2401,7 @@ function renderGrowthRates() {
 
 // ═══════════════════════════════════════════
 // LEAD DATA SEED (2026-07-10)
-// channels index: 0=リファラル 1=交流会 2=YouTube 3=お問い合わせ 4=書籍 5=SNS 6=セミナー
+// channels index: 0=リファラル 1=交流会 2=YouTube 3=お問い合わせ 4=書籍 5=SNS 6=ウェビナー 7=CCHトスアップ 8=登壇イベント
 // months  index: 0=6月 1=7月 2=8月 3=9月
 // ═══════════════════════════════════════════
 (function applyLeadSeed() {
