@@ -904,12 +904,19 @@ input[type=number].wb-num-input{-moz-appearance:textfield}
         <input id="wb-new-date" type="date">
       </div>
       <div>
-        <label>ウェビナー名</label>
+        <label>種別</label>
+        <select id="wb-new-type" style="font-size:12px;padding:4px 8px;border:1px solid var(--bdr);border-radius:6px;background:var(--bg);cursor:pointer">
+          <option value="webinar">📅 ウェビナー</option>
+          <option value="event">🎤 登壇イベント</option>
+        </select>
+      </div>
+      <div>
+        <label>イベント名</label>
         <input id="wb-new-name" placeholder="例：〇〇共催ウェビナー">
       </div>
       <div>
-        <label>共催先</label>
-        <input id="wb-new-partner" placeholder="共催先名">
+        <label>共催先 / 主催者</label>
+        <input id="wb-new-partner" placeholder="共催先・主催者名">
       </div>
       <div>
         <label>参加目標</label>
@@ -1708,6 +1715,9 @@ function renderWebinarExtra() {
     const monthStr = dt && !isNaN(dt) ? (dt.getMonth() + 1) + '月' : '--';
     const dayStr   = dt && !isNaN(dt) ? dt.getDate() : '--';
     const convTarget = Math.floor(parseInt(sv.target || 0) * 0.1);
+    const svType = sv.type || 'webinar';
+    const typeLabel = svType === 'event' ? '🎤 登壇イベント' : '📅 ウェビナー';
+    const typeBadgeClass = svType === 'event' ? 'badge-orange' : 'badge-blue';
     return `<div class="card webinar-card">
       <div class="date">
         <div style="font-size:10px">${monthStr}</div>
@@ -1715,10 +1725,17 @@ function renderWebinarExtra() {
         <div style="font-size:10px">開催</div>
       </div>
       <div>
+        <div style="margin-bottom:6px;display:flex;align-items:center;gap:8px">
+          <select class="wb-type-select" onchange="saveWebinarExtraArr(${i},'type',this.value);renderWebinarExtra();renderDashboardSchedule()"
+            style="font-size:11px;padding:3px 6px;border:1px solid var(--bdr);border-radius:6px;background:var(--bg);cursor:pointer">
+            <option value="webinar" ${svType==='webinar'?'selected':''}>📅 ウェビナー</option>
+            <option value="event"   ${svType==='event'  ?'selected':''}>🎤 登壇イベント</option>
+          </select>
+        </div>
         <h4><input class="editable" value="${sv.name||''}" style="font-size:13px;font-weight:700;width:100%;max-width:360px"
-          placeholder="ウェビナー名" oninput="saveWebinarExtraArr(${i},'name',this.value)"></h4>
-        <div class="partner">共催：<input class="editable" value="${sv.partner||''}" style="font-size:11px;width:140px"
-          placeholder="共催先" oninput="saveWebinarExtraArr(${i},'partner',this.value)"></div>
+          placeholder="イベント名" oninput="saveWebinarExtraArr(${i},'name',this.value)"></h4>
+        <div class="partner">共催 / 主催：<input class="editable" value="${sv.partner||''}" style="font-size:11px;width:140px"
+          placeholder="共催先・主催者" oninput="saveWebinarExtraArr(${i},'partner',this.value)"></div>
         <div style="margin-top:6px;font-size:11px">
           <input type="date" class="date-input" value="${sv.date||''}"
             onchange="saveWebinarExtraArr(${i},'date',this.value);renderWebinarExtra();renderDashboardSchedule()">
@@ -1793,16 +1810,18 @@ function deleteWebinarExtra(i) {
 
 function addWebinarRow() {
   const date    = document.getElementById('wb-new-date').value.trim();
+  const type    = document.getElementById('wb-new-type').value;
   const name    = document.getElementById('wb-new-name').value.trim();
   const partner = document.getElementById('wb-new-partner').value.trim();
   const target  = document.getElementById('wb-new-target').value.trim();
   const actual  = document.getElementById('wb-new-actual').value.trim();
   const note    = document.getElementById('wb-new-note').value.trim();
-  if (!name) { alert('ウェビナー名を入力してください'); return; }
+  if (!name) { alert('イベント名を入力してください'); return; }
   const extras = load('webinar_extra', []);
-  extras.push({ date, name, partner, target, actual, note });
+  extras.push({ date, type, name, partner, target, actual, note });
   save('webinar_extra', extras);
   document.getElementById('wb-new-date').value    = '';
+  document.getElementById('wb-new-type').value    = 'webinar';
   document.getElementById('wb-new-name').value    = '';
   document.getElementById('wb-new-partner').value = '';
   document.getElementById('wb-new-target').value  = '';
@@ -2007,14 +2026,16 @@ function renderDashboardSchedule() {
     items.push({ dt, label: d.name, sub: '共催：' + d.partner, type: 'webinar', dateStr: d.date });
   });
 
-  // Extra webinars
+  // Extra webinars / events
   const wbExtras = load('webinar_extra', []);
   wbExtras.forEach(sv => {
     if (!sv.date || !sv.name) return;
     const dt = new Date(sv.date);
     if (isNaN(dt)) return;
     const ds = sv.date.replace(/-/g, '/');
-    items.push({ dt, label: sv.name, sub: sv.partner ? '共催：' + sv.partner : '', type: 'webinar', dateStr: ds });
+    const itemType = sv.type === 'event' ? 'event' : 'webinar';
+    const subLabel = sv.partner ? (itemType === 'event' ? '主催：' : '共催：') + sv.partner : '';
+    items.push({ dt, label: sv.name, sub: subLabel, type: itemType, dateStr: ds });
   });
 
   // YouTube collabs with dates
@@ -2057,10 +2078,12 @@ function renderDashboardSchedule() {
 
   container.innerHTML = items.map(item => {
     const isPast = item.dt < today;
-    const typeIcon = item.type === 'webinar' ? '📅' : '🎬';
-    const typeBadge = item.type === 'webinar'
-      ? '<span class="badge badge-blue schedule-type-badge">ウェビナー</span>'
-      : '<span class="badge badge-green schedule-type-badge">YouTubeコラボ</span>';
+    const typeIcon  = item.type === 'youtube' ? '🎬' : item.type === 'event' ? '🎤' : '📅';
+    const typeBadge = item.type === 'youtube'
+      ? '<span class="badge badge-green schedule-type-badge">YouTubeコラボ</span>'
+      : item.type === 'event'
+      ? '<span class="badge badge-orange schedule-type-badge">登壇イベント</span>'
+      : '<span class="badge badge-blue schedule-type-badge">ウェビナー</span>';
     const pastStyle = isPast ? 'opacity:.55' : '';
     return `<div class="schedule-item" style="${pastStyle}">
       <span class="schedule-date">${typeIcon} ${fmt(item.dt)}</span>
