@@ -338,6 +338,22 @@ input[type=number].sns-num-input{-moz-appearance:textfield}
   background:#FAFBFD;transition:.2s
 }
 .weekly-topic-textarea:focus{outline:none;border-color:var(--accent);background:#fff}
+.weekly-topic-url-wrap{display:flex;align-items:center;gap:6px}
+.weekly-topic-url-label{font-size:10px;font-weight:600;color:var(--txg);white-space:nowrap;flex-shrink:0}
+.weekly-topic-url{
+  flex:1;border:1px solid var(--border);border-radius:6px;
+  padding:5px 8px;font-size:11px;font-family:inherit;color:var(--tx);
+  background:#FAFBFD;transition:.2s;min-width:0
+}
+.weekly-topic-url:focus{outline:none;border-color:var(--accent);background:#fff}
+.weekly-topic-url-btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:4px 8px;border-radius:6px;border:1px solid var(--border);
+  background:var(--lt-navy);color:var(--navy);font-size:10px;font-weight:600;
+  cursor:pointer;white-space:nowrap;text-decoration:none;flex-shrink:0;
+  transition:.15s
+}
+.weekly-topic-url-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
 
 /* Hide number spinners on small inline inputs */
 input[type=number].monthly-input::-webkit-inner-spin-button,
@@ -1088,7 +1104,7 @@ function printPDF() {
 // BACKUP / RESTORE
 // ═══════════════════════════════════════════
 function exportBackup() {
-  const keys = ['monthly','yt','yt_extra','cases','shorts','webinars','webinar_extra','memo','dash_kpis','weekly_topics','sns_weeks','sns_data'];
+  const keys = ['monthly','yt','yt_extra','cases','shorts','webinars','webinar_extra','memo','dash_kpis','weekly_topics','weekly_topics_url','sns_weeks','sns_data'];
   const backup = { _version: 1, _date: new Date().toISOString() };
   keys.forEach(k => {
     const v = localStorage.getItem('as_kpi_' + k);
@@ -1115,7 +1131,7 @@ function handleRestore(event) {
   reader.onload = function(e) {
     try {
       const data = JSON.parse(e.target.result);
-      const keys = ['monthly','yt','yt_extra','cases','shorts','webinars','webinar_extra','memo','dash_kpis','weekly_topics','sns_weeks','sns_data'];
+      const keys = ['monthly','yt','yt_extra','cases','shorts','webinars','webinar_extra','memo','dash_kpis','weekly_topics','weekly_topics_url','sns_weeks','sns_data'];
       keys.forEach(k => {
         if (data[k] !== undefined) {
           localStorage.setItem('as_kpi_' + k, JSON.stringify(data[k]));
@@ -2141,13 +2157,25 @@ function renderWeeklyTopics() {
   const wrap = document.getElementById('weekly-topics-wrap');
   if (!wrap) return;
   const data = load('weekly_topics', {});
+  const urlData = load('weekly_topics_url', {});
   wrap.innerHTML = weeklyTopicKeys.map(key => {
     const val = data[key] !== undefined ? data[key] : (weeklyTopicDefaults[key] || '');
+    const url = urlData[key] || '';
     const rows = Math.max(3, (val.match(/\n/g)||[]).length + 2);
+    const safeKey = escapeHtml(key);
+    const openBtn = url
+      ? `<a class="weekly-topic-url-btn" href="${escapeHtml(url)}" target="_blank" rel="noopener">開く ↗</a>`
+      : `<span class="weekly-topic-url-btn" style="opacity:.4;cursor:default;pointer-events:none">開く ↗</span>`;
     return `<div class="weekly-topic-section">
-      <div class="weekly-topic-label">${key}</div>
+      <div class="weekly-topic-label">${safeKey}</div>
       <textarea class="weekly-topic-textarea" rows="${rows}"
-        oninput="saveWeeklyTopic('${key}',this.value)">${escapeHtml(val)}</textarea>
+        oninput="saveWeeklyTopic('${safeKey}',this.value)">${escapeHtml(val)}</textarea>
+      <div class="weekly-topic-url-wrap">
+        <span class="weekly-topic-url-label">参照URL</span>
+        <input class="weekly-topic-url" type="url" placeholder="https://..." value="${escapeHtml(url)}"
+          oninput="saveWeeklyTopicUrl('${safeKey}',this.value);this.nextElementSibling.href=this.value||'#';this.nextElementSibling.style.opacity=this.value?'1':'.4';this.nextElementSibling.style.pointerEvents=this.value?'auto':'none'">
+        ${openBtn}
+      </div>
     </div>`;
   }).join('');
 }
@@ -2155,6 +2183,11 @@ function saveWeeklyTopic(key, val) {
   const data = load('weekly_topics', {});
   data[key] = val;
   save('weekly_topics', data);
+}
+function saveWeeklyTopicUrl(key, val) {
+  const data = load('weekly_topics_url', {});
+  data[key] = val;
+  save('weekly_topics_url', data);
 }
 
 // ═══════════════════════════════════════════
