@@ -815,6 +815,34 @@ input[type=number].wb-num-input{-moz-appearance:textfield}
       </div>
     </div>
   </div>
+
+  <!-- FB アプローチリスト -->
+  <div class="card">
+    <div class="card-title">FB アプローチリスト 進捗管理</div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap">
+      <span id="fb-badge-none"  class="badge badge-gray">未打診 0</span>
+      <span id="fb-badge-sent"  class="badge badge-orange">打診済 0</span>
+      <span id="fb-badge-wait"  class="badge badge-blue">返信待ち 0</span>
+      <span id="fb-badge-reply" class="badge badge-blue">返信あり 0</span>
+      <span id="fb-badge-sched" class="badge badge-orange">日程調整中 0</span>
+      <span id="fb-badge-done"  class="badge badge-green">完了 0</span>
+      <span id="fb-badge-ng"    class="badge badge-red">見送り 0</span>
+    </div>
+    <div class="tbl-wrap">
+    <table>
+      <thead><tr>
+        <th style="width:32px">判定</th>
+        <th style="min-width:100px">名前</th>
+        <th style="min-width:140px">会社・役職</th>
+        <th style="min-width:100px">アプローチ方法</th>
+        <th style="width:52px">可否</th>
+        <th style="min-width:110px">ステータス</th>
+        <th style="min-width:160px">メモ・進捗</th>
+      </tr></thead>
+      <tbody id="fb-tbody"></tbody>
+    </table>
+    </div>
+  </div>
 </div>
 
 <!-- ────────────────────────────────────── -->
@@ -1104,7 +1132,7 @@ function printPDF() {
 // BACKUP / RESTORE
 // ═══════════════════════════════════════════
 function exportBackup() {
-  const keys = ['monthly','yt','yt_extra','cases','shorts','webinars','webinar_extra','memo','dash_kpis','weekly_topics','weekly_topics_url','sns_weeks','sns_data'];
+  const keys = ['monthly','yt','yt_extra','cases','shorts','webinars','webinar_extra','memo','dash_kpis','weekly_topics','weekly_topics_url','sns_weeks','sns_data','fb_approach'];
   const backup = { _version: 1, _date: new Date().toISOString() };
   keys.forEach(k => {
     const v = localStorage.getItem('as_kpi_' + k);
@@ -1131,7 +1159,7 @@ function handleRestore(event) {
   reader.onload = function(e) {
     try {
       const data = JSON.parse(e.target.result);
-      const keys = ['monthly','yt','yt_extra','cases','shorts','webinars','webinar_extra','memo','dash_kpis','weekly_topics','weekly_topics_url','sns_weeks','sns_data'];
+      const keys = ['monthly','yt','yt_extra','cases','shorts','webinars','webinar_extra','memo','dash_kpis','weekly_topics','weekly_topics_url','sns_weeks','sns_data','fb_approach'];
       keys.forEach(k => {
         if (data[k] !== undefined) {
           localStorage.setItem('as_kpi_' + k, JSON.stringify(data[k]));
@@ -1510,6 +1538,106 @@ function addYTRow() {
   document.getElementById('yt-new-status').value = 'new';
   renderYT();
   renderDashboardSchedule();
+}
+
+// ═══════════════════════════════════════════
+// FB APPROACH LIST
+// ═══════════════════════════════════════════
+const fbApproachData = [
+  {no:2,  name:'高野 秀敏',   company:'株式会社キープレイヤーズ', role:'代表取締役CEO', judge:'◎', method:'ウェビナー共催・メッセージDM', canApproach:'○', note:'人材業界の重鎮。SNS影響力No.1クラス。共催ウェビナーで相互集客が最有望'},
+  {no:5,  name:'山本玲奈',    company:'株式会社ヒュープロ', role:'代表取締役CEO', judge:'◎', method:'ウェビナー共催・メッセージDM', canApproach:'○', note:'Forbes Japan 30 Under 30選出。士業・管理部門特化エージェントの先輩経営者'},
+  {no:9,  name:'寺口 浩大',   company:'株式会社ワンキャリア', role:'Evangelist / PR Director', judge:'◎', method:'ウェビナー共催・PR連携', canApproach:'△', note:'ONE CAREERとの共催は集客力×認知向上に有望'},
+  {no:15, name:'黒崎 駿',     company:'株式会社プレックス', role:'代表取締役CEO', judge:'◎', method:'ウェビナー共催・メッセージDM', canApproach:'○', note:'人材紹介×DX×M&Aの成功経営者。共催で相互集客・影響力補完が期待大'},
+  {no:16, name:'金井 芽衣',   company:'ポジウィル株式会社', role:'代表取締役社長', judge:'◎', method:'ウェビナー共催・メッセージDM', canApproach:'△', note:'キャリア支援×人材紹介の親和性高。共催で双方のターゲット層にリーチ可能'},
+  {no:17, name:'小川嶺',      company:'株式会社タイミー', role:'代表取締役CEO', judge:'◎', method:'ウェビナー共催・メッセージDM', canApproach:'×', note:'スポットワーク×正社員転換支援の接点で共催価値大。2024年上場'},
+  {no:18, name:'中嶋 汰朗',   company:'株式会社ROXX', role:'代表取締役社長', judge:'◎', method:'ウェビナー共催・メッセージDM', canApproach:'○', note:'agent bankは人材紹介会社の重要プラットフォーム。8/6ウェビナー共催済'},
+  {no:27, name:'石黒 卓弥',   company:'株式会社LayerX', role:'執行役員 CCO', judge:'◎', method:'ウェビナー共催・メッセージDM', canApproach:'×', note:'人事・採用・組織開発のトッププロ。採用支援・人材業界との親和性が非常に高い'},
+  {no:28, name:'曽山 哲人',   company:'株式会社サイバーエージェント', role:'常務執行役員 CHO', judge:'◎', method:'ウェビナー共催・イベント登壇依頼', canApproach:'×', note:'日本最大級のHR実務者・思想家。人材紹介業界への発信・共催価値が最高クラス'},
+  {no:31, name:'森本 千賀子', company:'株式会社morich', role:'代表取締役 All-Rounder Agent', judge:'◎', method:'ウェビナー共催・メッセージDM', canApproach:'×', note:'リクルート25年・累計売上歴代トップ。NHKプロフェッショナル出演。国内最高クラスの影響力'},
+  {no:4,  name:'坡山 里帆',   company:'株式会社Sworkers', role:'代表取締役CEO', judge:'○', method:'メッセージDM・共催企画', canApproach:'○', note:'人材紹介事業の先輩経営者。情報交換・共催・リファラル連携が有効'},
+  {no:6,  name:'新居 日南恵', company:'Cookpad / NPO manma', role:'研究員 / エグゼクティブディレクター', judge:'○', method:'メッセージDM・イベント登壇依頼', canApproach:'○', note:'女性×キャリア×社会起業。共催やコンテンツ連携で価値提供'},
+  {no:14, name:'与田 涼介',   company:'ウェルマーケ株式会社', role:'代表取締役CEO', judge:'○', method:'ウェビナー共催・メッセージDM', canApproach:'△', note:'医療介護特化の人材紹介代表。共催や情報交換で双方価値あり'},
+  {no:1,  name:'吉岡 諒',     company:'株式会社ウィルゲート', role:'専務取締役 COO', judge:'△', method:'ウェビナー共催・SNS連携', canApproach:'○', note:'SEO×人材紹介コンテンツ共催の可能性。競合ではなく補完関係'},
+  {no:7,  name:'磯田 将太',   company:'グロービス・キャピタル・パートナーズ', role:'プリンシパル', judge:'△', method:'メッセージDM', canApproach:'○', note:'VCとのリレーション構築→投資先企業へのリファラル源候補'},
+  {no:8,  name:'森川 朋彦',   company:'松竹ベンチャーズ株式会社', role:'取締役・常務執行役員', judge:'△', method:'メッセージDM', canApproach:'△', note:'エンタメ×スタートアップのCVC担当。投資先企業へのリファラル可能性'},
+  {no:10, name:'石倉 和宏',   company:'アカツキ / アカツキベンチャーズ', role:'取締役副社長 CFO&CSO', judge:'△', method:'メッセージDM', canApproach:'△', note:'CVC経由で投資先へのリファラル可能性'},
+  {no:11, name:'清水 夕稀',   company:'インキュベイトファンド（退職）', role:'PR・コミュニケーション ディレクター', judge:'△', method:'メッセージDM', canApproach:'△', note:'ビズリーチ出身。VC人脈でのリファラル可能性。現在の所属先不明'},
+  {no:12, name:'長南佑輔',    company:'合同会社DMM.com', role:'COO室 室長', judge:'△', method:'メッセージDM', canApproach:'○', note:'M&A戦略・CVC運営担当のキーパーソン。事業会社CVC経由でのリファラル可能性'},
+  {no:13, name:'Younsil Kim', company:'株式会社M&Aサクシード', role:'代表取締役社長', judge:'△', method:'メッセージDM', canApproach:'△', note:'リクルート出身→ビジョナルグループ。M&A後の組織強化ニーズで接点探る余地あり'},
+  {no:19, name:'宮田 昇始',   company:'株式会社SmartHR', role:'代表取締役CEO', judge:'△', method:'メッセージDM・業界イベント', canApproach:'×', note:'人事SaaSの雄。共催イベント・情報交換で人材紹介層へのリーチに価値あり'},
+  {no:20, name:'経沢 香保子', company:'株式会社キッズライン（元代表）', role:'創業者・元代表取締役社長', judge:'△', method:'メッセージDM・イベント登壇', canApproach:'×', note:'女性起業家のアイコン。SNS影響力大。退任後の次の動きに注目'},
+  {no:21, name:'寺田 修輔',   company:'Dual Bridge Capital', role:'代表パートナー', judge:'△', method:'メッセージDM', canApproach:'×', note:'VC投資家。投資先への紹介・リファラル源として関係構築に価値あり'},
+  {no:24, name:'千葉 佳織',   company:'株式会社kaeka', role:'代表取締役CEO', judge:'△', method:'メッセージDM・共催ウェビナー', canApproach:'×', note:'エージェント向け営業トレーニングの切り口でウェビナー共催の可能性'},
+  {no:25, name:'古川 健介',   company:'アル株式会社', role:'代表取締役', judge:'△', method:'メッセージDM・コラボコンテンツ', canApproach:'×', note:'X30万フォロワーの著名起業家。コンテンツコラボ価値あり'},
+  {no:26, name:'山本 正喜',   company:'株式会社kubell（旧Chatwork）', role:'代表取締役CEO', judge:'△', method:'メッセージDM', canApproach:'×', note:'SaaS・BPaaSの上場企業CEO。業界イベントでの関係構築価値あり'},
+  {no:29, name:'髙橋 史好',   company:'concon株式会社', role:'代表取締役CEO', judge:'△', method:'メッセージDM', canApproach:'×', note:'2000年生まれ(25歳)。慶應大出身。日本青年会議所TOYP選出'},
+];
+
+const fbStatusLabel = {
+  none:  '<span class="badge badge-gray">未打診</span>',
+  sent:  '<span class="badge badge-orange">打診済</span>',
+  wait:  '<span class="badge badge-blue">返信待ち</span>',
+  reply: '<span class="badge badge-blue">返信あり</span>',
+  sched: '<span class="badge badge-orange">日程調整中</span>',
+  done:  '<span class="badge badge-green">完了</span>',
+  ng:    '<span class="badge badge-red">見送り</span>',
+};
+
+const fbJudgeColor = { '◎':'#E8F8F8;color:#46A5A5;font-weight:700', '○':'#EAF4FB;color:#216FBB', '△':'#FFF8E5;color:#E67E22', '×':'#FFE9E9;color:#C0392B' };
+
+function renderFB() {
+  const saved = load('fb_approach', {});
+  const tb = document.getElementById('fb-tbody');
+  if (!tb) return;
+
+  const counts = {none:0, sent:0, wait:0, reply:0, sched:0, done:0, ng:0};
+
+  const rows = fbApproachData.map((d, i) => {
+    const status = saved[`st_${i}`] || 'none';
+    const memo   = saved[`memo_${i}`] || '';
+    counts[status] = (counts[status] || 0) + 1;
+    const jStyle = fbJudgeColor[d.judge] || '';
+    const capColor = d.canApproach === '○' ? '#078021' : d.canApproach === '△' ? '#E67E22' : '#C0392B';
+    return `<tr>
+      <td class="center" style="background:${jStyle};font-size:12px">${d.judge}</td>
+      <td><strong style="font-size:11px">${d.name}</strong></td>
+      <td style="font-size:10px"><strong>${d.company}</strong><br><span style="color:var(--txg)">${d.role}</span></td>
+      <td style="font-size:10px">${d.method}</td>
+      <td class="center" style="font-size:11px;font-weight:700;color:${capColor}">${d.canApproach}</td>
+      <td class="center">
+        <select style="font-size:10px;border:1px solid var(--border);border-radius:4px;padding:2px 4px"
+          onchange="saveFB('st_${i}',this.value);renderFB()">
+          <option value="none"  ${status==='none' ?'selected':''}>未打診</option>
+          <option value="sent"  ${status==='sent' ?'selected':''}>打診済</option>
+          <option value="wait"  ${status==='wait' ?'selected':''}>返信待ち</option>
+          <option value="reply" ${status==='reply'?'selected':''}>返信あり</option>
+          <option value="sched" ${status==='sched'?'selected':''}>日程調整中</option>
+          <option value="done"  ${status==='done' ?'selected':''}>完了</option>
+          <option value="ng"    ${status==='ng'   ?'selected':''}>見送り</option>
+        </select>
+      </td>
+      <td><input class="editable" value="${memo.replace(/"/g,'&quot;')}" placeholder="${d.note.substring(0,25)}..."
+        onchange="saveFB('memo_${i}',this.value)" style="font-size:10px"></td>
+    </tr>`;
+  }).join('');
+
+  tb.innerHTML = rows;
+
+  // バッジ更新
+  const bdg = (id, label, n) => { const el=document.getElementById(id); if(el) el.textContent=`${label} ${n}`; };
+  bdg('fb-badge-none',  '未打診',   counts.none  || 0);
+  bdg('fb-badge-sent',  '打診済',   counts.sent  || 0);
+  bdg('fb-badge-wait',  '返信待ち', counts.wait  || 0);
+  bdg('fb-badge-reply', '返信あり', counts.reply || 0);
+  bdg('fb-badge-sched', '日程調整中', counts.sched || 0);
+  bdg('fb-badge-done',  '完了',     counts.done  || 0);
+  bdg('fb-badge-ng',    '見送り',   counts.ng    || 0);
+}
+
+function saveFB(key, val) {
+  const data = load('fb_approach', {});
+  data[key] = val;
+  save('fb_approach', data);
 }
 
 // ═══════════════════════════════════════════
@@ -2503,6 +2631,7 @@ renderBars();
 renderWeeklyTopics();
 renderMonthly();
 renderYT();
+renderFB();
 renderCases();
 renderShorts();
 renderWebinars();
