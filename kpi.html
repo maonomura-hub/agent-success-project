@@ -1585,6 +1585,25 @@ const fbStatusLabel = {
 
 const fbJudgeColor = { '◎':'#E8F8F8;color:#46A5A5;font-weight:700', '○':'#EAF4FB;color:#216FBB', '△':'#FFF8E5;color:#E67E22', '×':'#FFE9E9;color:#C0392B' };
 
+const fbRowBg = {
+  none:  '',
+  sent:  'background:#FFF8EE',
+  wait:  'background:#EFF4FB',
+  reply: 'background:#E3EEF9',
+  sched: 'background:#FFF3E0',
+  done:  'background:#E8F5E9',
+  ng:    'background:#F5F5F5;opacity:.55',
+};
+const fbLeftBorder = {
+  none:  '#D1D5DB',
+  sent:  '#C96A00',
+  wait:  '#216FBB',
+  reply: '#1558A0',
+  sched: '#E67E22',
+  done:  '#1D7A4A',
+  ng:    '#9CA3AF',
+};
+
 function renderFB() {
   const saved = load('fb_approach', {});
   const tb = document.getElementById('fb-tbody');
@@ -1598,13 +1617,16 @@ function renderFB() {
     counts[status] = (counts[status] || 0) + 1;
     const jStyle = fbJudgeColor[d.judge] || '';
     const capColor = d.canApproach === '○' ? '#078021' : d.canApproach === '△' ? '#E67E22' : '#C0392B';
-    return `<tr>
-      <td class="center" style="background:${jStyle};font-size:12px">${d.judge}</td>
+    const rowStyle = fbRowBg[status] || '';
+    const borderColor = fbLeftBorder[status] || '#D1D5DB';
+    return `<tr style="${rowStyle}">
+      <td class="center" style="background:${jStyle};font-size:12px;border-left:4px solid ${borderColor}">${d.judge}</td>
       <td><strong style="font-size:11px">${d.name}</strong></td>
       <td style="font-size:10px"><strong>${d.company}</strong><br><span style="color:var(--txg)">${d.role}</span></td>
       <td style="font-size:10px">${d.method}</td>
       <td class="center" style="font-size:11px;font-weight:700;color:${capColor}">${d.canApproach}</td>
-      <td class="center">
+      <td class="center" style="white-space:nowrap">
+        <div style="margin-bottom:4px">${fbStatusLabel[status]}</div>
         <select style="font-size:10px;border:1px solid var(--border);border-radius:4px;padding:2px 4px"
           onchange="saveFB('st_${i}',this.value);renderFB()">
           <option value="none"  ${status==='none' ?'selected':''}>未打診</option>
