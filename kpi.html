@@ -827,6 +827,7 @@ input[type=number].wb-num-input{-moz-appearance:textfield}
       <span id="fb-badge-sched" class="badge badge-orange">日程調整中 0</span>
       <span id="fb-badge-done"  class="badge badge-green">完了 0</span>
       <span id="fb-badge-ng"    class="badge badge-red">見送り 0</span>
+      <span id="fb-badge-skip"  class="badge badge-gray">対象外 0</span>
     </div>
     <div class="tbl-wrap">
     <table>
@@ -1581,6 +1582,7 @@ const fbStatusLabel = {
   sched: '<span class="badge badge-orange">日程調整中</span>',
   done:  '<span class="badge badge-green">完了</span>',
   ng:    '<span class="badge badge-red">見送り</span>',
+  skip:  '<span class="badge badge-gray">対象外</span>',
 };
 
 const fbJudgeColor = { '◎':'#E8F8F8;color:#46A5A5;font-weight:700', '○':'#EAF4FB;color:#216FBB', '△':'#FFF8E5;color:#E67E22', '×':'#FFE9E9;color:#C0392B' };
@@ -1593,6 +1595,7 @@ const fbRowBg = {
   sched: 'background:#FFF3E0',
   done:  'background:#E8F5E9',
   ng:    'background:#F5F5F5;opacity:.55',
+  skip:  'background:#F3F4F6;opacity:.45',
 };
 const fbLeftBorder = {
   none:  '#D1D5DB',
@@ -1602,6 +1605,7 @@ const fbLeftBorder = {
   sched: '#E67E22',
   done:  '#1D7A4A',
   ng:    '#9CA3AF',
+  skip:  '#CBD5E1',
 };
 
 function renderFB() {
@@ -1609,7 +1613,7 @@ function renderFB() {
   const tb = document.getElementById('fb-tbody');
   if (!tb) return;
 
-  const counts = {none:0, sent:0, wait:0, reply:0, sched:0, done:0, ng:0};
+  const counts = {none:0, sent:0, wait:0, reply:0, sched:0, done:0, ng:0, skip:0};
 
   const rows = fbApproachData.map((d, i) => {
     const status = saved[`st_${i}`] || 'none';
@@ -1636,6 +1640,7 @@ function renderFB() {
           <option value="sched" ${status==='sched'?'selected':''}>日程調整中</option>
           <option value="done"  ${status==='done' ?'selected':''}>完了</option>
           <option value="ng"    ${status==='ng'   ?'selected':''}>見送り</option>
+          <option value="skip"  ${status==='skip' ?'selected':''}>アプローチしない</option>
         </select>
       </td>
       <td><input class="editable" value="${memo.replace(/"/g,'&quot;')}" placeholder="${d.note.substring(0,25)}..."
@@ -1654,6 +1659,7 @@ function renderFB() {
   bdg('fb-badge-sched', '日程調整中', counts.sched || 0);
   bdg('fb-badge-done',  '完了',     counts.done  || 0);
   bdg('fb-badge-ng',    '見送り',   counts.ng    || 0);
+  bdg('fb-badge-skip',  '対象外',   counts.skip  || 0);
 }
 
 function saveFB(key, val) {
