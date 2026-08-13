@@ -837,8 +837,6 @@ input[type=number].wb-num-input{-moz-appearance:textfield}
         <th style="width:32px">判定</th>
         <th style="min-width:100px">名前</th>
         <th style="min-width:140px">会社・役職</th>
-        <th style="min-width:100px">アプローチ方法</th>
-        <th style="width:52px">可否</th>
         <th style="min-width:110px">ステータス</th>
         <th style="min-width:160px">メモ・進捗</th>
       </tr></thead>
@@ -1628,15 +1626,12 @@ function renderFB() {
     const memo   = saved[`memo_${i}`] || '';
     counts[status] = (counts[status] || 0) + 1;
     const jStyle = fbJudgeColor[d.judge] || '';
-    const capColor = d.canApproach === '○' ? '#078021' : d.canApproach === '△' ? '#E67E22' : '#C0392B';
     const rowStyle = fbRowBg[status] || '';
     const borderColor = fbLeftBorder[status] || '#D1D5DB';
     return `<tr style="${rowStyle}">
       <td class="center" style="background:${jStyle};font-size:12px;border-left:4px solid ${borderColor}">${d.judge}</td>
       <td><strong style="font-size:11px">${d.name}</strong></td>
       <td style="font-size:10px"><strong>${d.company}</strong><br><span style="color:var(--txg)">${d.role}</span></td>
-      <td style="font-size:10px">${d.method}</td>
-      <td class="center" style="font-size:11px;font-weight:700;color:${capColor}">${d.canApproach}</td>
       <td class="center" style="white-space:nowrap">
         <div style="margin-bottom:4px">${fbStatusLabel[status]}</div>
         <select style="font-size:10px;border:1px solid var(--border);border-radius:4px;padding:2px 4px"
