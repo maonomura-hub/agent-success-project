@@ -1111,14 +1111,7 @@ input[type=number].wb-num-input{-moz-appearance:textfield}
       <input id="pr-summary" placeholder="概要" style="padding:8px 10px;border:1px solid #ccc;border-radius:6px;font-size:14px;">
       <input id="pr-company" placeholder="関係会社" style="padding:8px 10px;border:1px solid #ccc;border-radius:6px;font-size:14px;">
     </div>
-    <div style="display:grid;grid-template-columns:2fr 1fr auto;gap:10px;align-items:center;">
-      <input id="pr-file" placeholder="ファイル名 or URL" style="padding:8px 10px;border:1px solid #ccc;border-radius:6px;font-size:14px;">
-      <select id="pr-status" style="padding:8px 10px;border:1px solid #ccc;border-radius:6px;font-size:14px;">
-        <option value="未作成">未作成</option>
-        <option value="完成">完成</option>
-        <option value="作成中">作成中</option>
-        <option value="公開済">公開済</option>
-      </select>
+    <div style="display:flex;justify-content:flex-end;">
       <button onclick="prAdd()" style="padding:8px 20px;background:#3a7dc9;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:700;cursor:pointer;">追加</button>
     </div>
   </div>
@@ -1132,8 +1125,6 @@ input[type=number].wb-num-input{-moz-appearance:textfield}
           <th style="padding:10px 12px;text-align:left;">タイトル（テーマ）</th>
           <th style="padding:10px 12px;text-align:left;">関係会社</th>
           <th style="padding:10px 12px;text-align:left;">概要</th>
-          <th style="padding:10px 12px;text-align:left;">ファイル名</th>
-          <th style="padding:10px 12px;text-align:center;width:80px;">ステータス</th>
           <th style="padding:10px 12px;text-align:center;width:48px;">削除</th>
         </tr>
       </thead>
@@ -1186,7 +1177,6 @@ function prRender() {
   if (!tbody) return;
   tbody.innerHTML = '';
   data.forEach((item, idx) => {
-    const sc = STATUS_COLOR[item.status] || STATUS_COLOR['未作成'];
     const tr = document.createElement('tr');
     tr.style.background = idx % 2 === 0 ? '#fff' : '#f8f9fb';
     tr.innerHTML = `
@@ -1194,10 +1184,6 @@ function prRender() {
       <td style="padding:10px 12px;font-weight:600;">${escHtml(item.title)}</td>
       <td style="padding:10px 12px;font-size:13px;color:#444;">${escHtml(item.company)}</td>
       <td style="padding:10px 12px;font-size:13px;color:#555;">${escHtml(item.summary)}</td>
-      <td style="padding:10px 12px;font-size:12px;color:#777;word-break:break-all;">${escHtml(item.file)}</td>
-      <td style="padding:10px 12px;text-align:center;">
-        <span style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:700;background:${sc.bg};color:${sc.color};border:1px solid ${sc.border};">${escHtml(item.status)}</span>
-      </td>
       <td style="padding:10px 12px;text-align:center;">
         <button onclick="prDelete(${idx})" style="background:none;border:none;cursor:pointer;font-size:16px;color:#c00;" title="削除">🗑</button>
       </td>
@@ -1210,15 +1196,12 @@ function prAdd() {
   const title   = document.getElementById('pr-title').value.trim();
   const summary = document.getElementById('pr-summary').value.trim();
   const company = document.getElementById('pr-company').value.trim();
-  const file    = document.getElementById('pr-file').value.trim();
-  const status  = document.getElementById('pr-status').value;
   if (!title) { alert('タイトルを入力してください'); return; }
   const data = prLoad();
-  data.push({ title, company, summary, file: file || '（未作成）', status });
+  data.push({ title, company, summary });
   prSave(data);
   prRender();
-  ['pr-title','pr-summary','pr-company','pr-file'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('pr-status').value = '未作成';
+  ['pr-title','pr-summary','pr-company'].forEach(id => document.getElementById(id).value = '');
 }
 
 function prDelete(idx) {
