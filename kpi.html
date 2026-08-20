@@ -439,7 +439,7 @@ input[type=number].wb-num-input{-moz-appearance:textfield}
 <div class="tab-bar">
   <button class="tab-btn active" onclick="switchTab('dashboard',this)">📊 ダッシュボード</button>
   <button class="tab-btn" onclick="switchTab('channel',this)">📈 チャネルKPI</button>
-  <button class="tab-btn" onclick="switchTab('youtube',this)">🎬 YouTubeコラボ</button>
+  <button class="tab-btn" onclick="switchTab('youtube',this)">🤝 コラボ</button>
   <button class="tab-btn" onclick="switchTab('content',this)">📝 コンテンツ</button>
   <button class="tab-btn" onclick="switchTab('webinar',this)">📅 ウェビナー</button>
   <button class="tab-btn" onclick="switchTab('persona',this)">🎯 ペルソナ×LP</button>
@@ -737,114 +737,122 @@ input[type=number].wb-num-input{-moz-appearance:textfield}
 <!-- ────────────────────────────────────── -->
 <div id="tab-youtube" class="tab-panel">
 
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px">
-    <div class="card" style="border-top:3px solid var(--green)">
-      <div class="kpi-label">出演確定</div>
-      <div class="kpi-val green" id="yt-confirmed-count">6件</div>
+  <!-- KPIサマリ -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px">
+    <div class="card" style="border-top:3px solid var(--green);text-align:center">
+      <div class="kpi-label">確定</div>
+      <div class="kpi-val green" id="cb-confirmed-count">-</div>
     </div>
-    <div class="card" style="border-top:3px solid var(--orange)">
+    <div class="card" style="border-top:3px solid var(--orange);text-align:center">
       <div class="kpi-label">打診中</div>
-      <div class="kpi-val orange" id="yt-pending-count">5件</div>
+      <div class="kpi-val orange" id="cb-pending-count">-</div>
+    </div>
+    <div class="card" style="border-top:3px solid var(--accent);text-align:center">
+      <div class="kpi-label">未打診</div>
+      <div class="kpi-val" id="cb-new-count">-</div>
+    </div>
+    <div class="card" style="border-top:3px solid #9ca3af;text-align:center">
+      <div class="kpi-label">希望枠</div>
+      <div class="kpi-val" id="cb-target-count">-</div>
     </div>
   </div>
 
-  <div class="card">
-    <div class="card-title">YouTube施策 進め方指針</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-      <div>
-        <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:6px">🎯 優先ターゲット①</div>
-        <p style="font-size:11.5px;line-height:1.6">起業・独立したい人（ペルソナ②）<br>「人材紹介の立ち上げ方」「0から月商100万の設計」テーマで出演依頼</p>
-      </div>
-      <div>
-        <div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:6px">🎯 優先ターゲット②</div>
-        <p style="font-size:11.5px;line-height:1.6">採用に悩む経営者（ペルソナ①）<br>「採用コストを収益に変える」「現場系企業が人材紹介を始めると強い理由」テーマ</p>
-      </div>
-      <div>
-        <div style="font-size:11px;font-weight:700;color:var(--navy);margin-bottom:6px">📺 自社チャンネル方針</div>
-        <p style="font-size:11.5px;line-height:1.6">SEO受け皿として最低限整備。LP導線・サムネイル統一・再生リスト整理を優先</p>
-      </div>
-      <div>
-        <div style="font-size:11px;font-weight:700;color:var(--orange);margin-bottom:6px">✂️ ショート戦略</div>
-        <p style="font-size:11.5px;line-height:1.6">長尺1本→ショート3-5本に切り出し。TikTok・Instagram Reelsに同時配信</p>
-      </div>
+  <!-- 追加フォーム -->
+  <div style="background:#f0f4ff;border:1px solid #c8d8ff;border-radius:10px;padding:14px 18px;margin-bottom:20px">
+    <div style="font-weight:700;font-size:14px;margin-bottom:10px;color:#2a3a6e">＋ 新規追加</div>
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:8px;align-items:end">
+      <input id="cb-new-name" placeholder="名前 / チャンネル名 / 媒体名" style="padding:7px 10px;border:1px solid #ccc;border-radius:6px;font-size:13px">
+      <input id="cb-new-company" placeholder="会社・役職" style="padding:7px 10px;border:1px solid #ccc;border-radius:6px;font-size:13px">
+      <select id="cb-new-section" style="padding:7px 10px;border:1px solid #ccc;border-radius:6px;font-size:13px">
+        <option value="event">🎤 登壇イベント</option>
+        <option value="webinar">📅 ウェビナー</option>
+        <option value="youtube" selected>▶️ YouTube</option>
+        <option value="interview">📝 インタビュー記事</option>
+      </select>
+      <select id="cb-new-status" style="padding:7px 10px;border:1px solid #ccc;border-radius:6px;font-size:13px">
+        <option value="confirmed">✅ 確定</option>
+        <option value="pending">🔄 打診中</option>
+        <option value="new" selected>📌 未打診</option>
+        <option value="target">🎯 希望枠</option>
+        <option value="ng">❌ 見送り</option>
+      </select>
+      <button onclick="cbAdd()" style="padding:7px 18px;background:#3a7dc9;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">追加</button>
     </div>
+    <input id="cb-new-note" placeholder="メモ・進捗..." style="margin-top:8px;width:100%;padding:7px 10px;border:1px solid #ccc;border-radius:6px;font-size:13px;box-sizing:border-box">
   </div>
 
-  <div class="card">
-    <div class="card-title">出演・コラボ進捗管理</div>
+  <!-- 登壇イベント -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-title">🎤 登壇イベント</div>
     <div class="tbl-wrap">
     <table>
       <thead><tr>
-        <th>チャンネル名</th><th>ステータス</th>
-        <th style="min-width:90px">収録予定日</th>
-        <th style="min-width:90px">公開予定日</th>
-        <th style="min-width:180px">備考・アクション</th>
+        <th style="min-width:140px">名前 / 団体名</th>
+        <th style="min-width:120px">会社・役職</th>
+        <th style="min-width:90px">ステータス</th>
+        <th style="min-width:160px">メモ・進捗</th>
+        <th style="min-width:110px">セクション移動</th>
         <th style="width:36px"></th>
       </tr></thead>
-      <tbody id="yt-tbody"></tbody>
+      <tbody id="cb-event-tbody"></tbody>
     </table>
-    </div>
-
-    <!-- ADD ROW FORM -->
-    <div class="yt-add-form" id="yt-add-form">
-      <div>
-        <label>チャンネル名</label>
-        <input id="yt-new-name" placeholder="例：〇〇チャンネル（登録者数）">
-      </div>
-      <div>
-        <label>ステータス</label>
-        <select id="yt-new-status">
-          <option value="confirmed">✅ 確定</option>
-          <option value="pending">🔄 打診中</option>
-          <option value="new" selected>📌 未打診</option>
-          <option value="target">🎯 希望枠</option>
-        </select>
-      </div>
-      <div>
-        <label>収録予定日</label>
-        <input id="yt-new-rec" type="date">
-      </div>
-      <div>
-        <label>公開予定日</label>
-        <input id="yt-new-pub" type="date">
-      </div>
-      <div>
-        <label>備考・アクション</label>
-        <input id="yt-new-note" placeholder="メモ...">
-      </div>
-      <div style="padding-top:16px">
-        <button class="btn-sm green" onclick="addYTRow()">＋ 追加</button>
-      </div>
     </div>
   </div>
 
-  <!-- FB アプローチリスト -->
-  <div class="card">
-    <div class="card-title">FB アプローチリスト 進捗管理</div>
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap">
-      <span id="fb-badge-none"  class="badge badge-gray">未打診 0</span>
-      <span id="fb-badge-sent"  class="badge badge-orange">打診済 0</span>
-      <span id="fb-badge-wait"  class="badge badge-blue">返信待ち 0</span>
-      <span id="fb-badge-reply" class="badge badge-blue">返信あり 0</span>
-      <span id="fb-badge-sched" class="badge badge-orange">日程調整中 0</span>
-      <span id="fb-badge-done"  class="badge badge-green">完了 0</span>
-      <span id="fb-badge-ng"    class="badge badge-red">見送り 0</span>
-      <span id="fb-badge-skip"  class="badge badge-gray">対象外 0</span>
-      <span id="fb-badge-refer" class="badge badge-purple">知人経由 0</span>
-    </div>
+  <!-- ウェビナー -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-title">📅 ウェビナー</div>
     <div class="tbl-wrap">
     <table>
       <thead><tr>
-        <th style="width:32px">判定</th>
-        <th style="min-width:100px">名前</th>
-        <th style="min-width:140px">会社・役職</th>
-        <th style="min-width:110px">ステータス</th>
+        <th style="min-width:140px">名前 / 媒体名</th>
+        <th style="min-width:120px">会社・役職</th>
+        <th style="min-width:90px">ステータス</th>
         <th style="min-width:160px">メモ・進捗</th>
+        <th style="min-width:110px">セクション移動</th>
+        <th style="width:36px"></th>
       </tr></thead>
-      <tbody id="fb-tbody"></tbody>
+      <tbody id="cb-webinar-tbody"></tbody>
     </table>
     </div>
   </div>
+
+  <!-- YouTube -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-title">▶️ YouTube</div>
+    <div class="tbl-wrap">
+    <table>
+      <thead><tr>
+        <th style="min-width:140px">チャンネル名</th>
+        <th style="min-width:120px">ハンドル / 会社</th>
+        <th style="min-width:90px">ステータス</th>
+        <th style="min-width:160px">メモ・進捗</th>
+        <th style="min-width:110px">セクション移動</th>
+        <th style="width:36px"></th>
+      </tr></thead>
+      <tbody id="cb-youtube-tbody"></tbody>
+    </table>
+    </div>
+  </div>
+
+  <!-- インタビュー記事 -->
+  <div class="card">
+    <div class="card-title">📝 インタビュー記事</div>
+    <div class="tbl-wrap">
+    <table>
+      <thead><tr>
+        <th style="min-width:140px">名前 / 媒体名</th>
+        <th style="min-width:120px">会社・役職</th>
+        <th style="min-width:90px">ステータス</th>
+        <th style="min-width:160px">メモ・進捗</th>
+        <th style="min-width:110px">セクション移動</th>
+        <th style="width:36px"></th>
+      </tr></thead>
+      <tbody id="cb-interview-tbody"></tbody>
+    </table>
+    </div>
+  </div>
+
 </div>
 
 <!-- ────────────────────────────────────── -->
@@ -1519,283 +1527,209 @@ function parseAndLoadCSV(text) {
 }
 
 // ═══════════════════════════════════════════
-// YOUTUBE COLLAB
+// COLLAB TAB (登壇イベント / ウェビナー / YouTube / インタビュー記事)
 // ═══════════════════════════════════════════
-const ytData = [
-  {name:'高野さん（Key Players）', handle:'@keyplayers', status:'confirmed'},
-  {name:'HRmarker', handle:'@HRMAKERryoma', status:'confirmed'},
-  {name:'HERP', handle:'YouTube公式', status:'confirmed'},
-  {name:'アナザーワークス', handle:'@obayashi_career', status:'confirmed'},
-  {name:'酒井さん（人材紹介）', handle:'@sakai-jinzai-shokai', status:'confirmed'},
-  {name:'コックピット', handle:'@cockpit_hr', status:'confirmed'},
-  {name:'M&A CAMP', handle:'@macamp0817', status:'pending'},
-  {name:'トプシュー', handle:'@topsyu_tenshoku', status:'pending'},
-  {name:'UZUZ 岡本さん', handle:'@uzuz5236', status:'pending'},
-  {name:'ツナグバ', handle:'@tsunagubapr', status:'pending'},
-  {name:'マルゴト', handle:'@marugotoch', status:'pending'},
-  {name:'採用こっそり相談室 (2,470人)', handle:'@saiyou-soudan', status:'new', note:'ペルソナ①直撃。早期打診推奨'},
-  {name:'キッシー社長の採用道 (4,900人)', handle:'採用道ch', status:'new', note:'経営者×採用。ペルソナ①に直結'},
-  {name:'儲かり学 スモビジまん (2.46万)', handle:'スモールビジネスstudio', status:'new', note:'起業・新規事業層への認知拡大'},
-  {name:'アントレ フランチャイズ起業TV (10.3万)', handle:'本命枠', status:'target', note:'規模最大。起業・独立層への直接リーチ'},
-  {name:'社長名鑑', handle:'経営者インタビュー専門', status:'target', note:'権威づけ・経営者層への認知'},
-  {name:'PIVOT (400万人)', handle:'@pivot00', status:'target', note:'希望枠。登録者最大級'},
+const COLLAB_KEY = 'as_collab_v2';
+
+const collabInitial = [
+  // ── 登壇イベント ──
+  { name:'IR Robotics', company:'IR Robotics', section:'event', status:'new', note:'' },
+  { name:'メーテレ', company:'メーテレ', section:'event', status:'new', note:'' },
+  { name:'HYPE', company:'HYPE', section:'event', status:'new', note:'' },
+  { name:'YOUTRUST', company:'YOUTRUST', section:'event', status:'new', note:'' },
+  { name:'エージェントごった煮会', company:'', section:'event', status:'new', note:'' },
+  // FB approach list → 登壇イベント
+  { name:'高野 秀敏', company:'株式会社キープレイヤーズ / 代表取締役CEO', section:'event', status:'confirmed', note:'人材業界の重鎮。SNS影響力No.1クラス。共催ウェビナーで相互集客が最有望' },
+  { name:'山本玲奈', company:'株式会社ヒュープロ / 代表取締役CEO', section:'event', status:'pending', note:'Forbes Japan 30 Under 30選出。士業・管理部門特化エージェントの先輩経営者' },
+  { name:'寺口 浩大', company:'株式会社ワンキャリア / Evangelist', section:'event', status:'pending', note:'ONE CAREERとの共催は集客力×認知向上に有望' },
+  { name:'黒崎 駿', company:'株式会社プレックス / 代表取締役CEO', section:'event', status:'pending', note:'人材紹介×DX×M&Aの成功経営者。共催で相互集客・影響力補完が期待大' },
+  { name:'金井 芽衣', company:'ポジウィル株式会社 / 代表取締役社長', section:'event', status:'confirmed', note:'キャリア支援×人材紹介の親和性高。共催で双方のターゲット層にリーチ可能' },
+  { name:'小川嶺', company:'株式会社タイミー / 代表取締役CEO', section:'event', status:'pending', note:'スポットワーク×正社員転換支援の接点で共催価値大。2024年上場' },
+  { name:'中嶋 汰朗', company:'株式会社ROXX / 代表取締役社長', section:'event', status:'pending', note:'agent bankは人材紹介会社の重要プラットフォーム。8/6ウェビナー共催済' },
+  { name:'石黒 卓弥', company:'株式会社LayerX / 執行役員 CCO', section:'event', status:'pending', note:'人事・採用・組織開発のトッププロ。採用支援・人材業界との親和性が非常に高い' },
+  { name:'曽山 哲人', company:'株式会社サイバーエージェント / 常務執行役員 CHO', section:'event', status:'pending', note:'日本最大級のHR実務者・思想家。人材紹介業界への発信・共催価値が最高クラス' },
+  { name:'森本 千賀子', company:'株式会社morich / 代表取締役', section:'event', status:'pending', note:'リクルート25年・累計売上歴代トップ。NHKプロフェッショナル出演。国内最高クラスの影響力' },
+  { name:'坡山 里帆', company:'株式会社Sworkers / 代表取締役CEO', section:'event', status:'confirmed', note:'人材紹介事業の先輩経営者。情報交換・共催・リファラル連携が有効' },
+  { name:'新居 日南恵', company:'Cookpad / NPO manma', section:'event', status:'new', note:'女性×キャリア×社会起業。共催やコンテンツ連携で価値提供' },
+  { name:'与田 涼介', company:'ウェルマーケ株式会社 / 代表取締役CEO', section:'event', status:'new', note:'医療介護特化の人材紹介代表。共催や情報交換で双方価値あり' },
+  { name:'吉岡 諒', company:'株式会社ウィルゲート / 専務取締役COO', section:'event', status:'pending', note:'SEO×人材紹介コンテンツ共催の可能性。競合ではなく補完関係' },
+  { name:'磯田 将太', company:'グロービス・キャピタル・パートナーズ / プリンシパル', section:'event', status:'ng', note:'VCとのリレーション構築→投資先企業へのリファラル源候補' },
+  { name:'長南佑輔', company:'合同会社DMM.com / COO室長', section:'event', status:'pending', note:'お客さんに紹介していて、人材紹介の結果がセンシティブなので少し時間おく' },
+  { name:'黒崎 駿', company:'株式会社プレックス', section:'event', status:'pending', note:'' },
+  { name:'宮田 昇始', company:'株式会社SmartHR / 代表取締役CEO', section:'event', status:'pending', note:'人事SaaSの雄。共催イベント・情報交換で人材紹介層へのリーチに価値あり' },
+  { name:'森川 朋彦', company:'松竹ベンチャーズ株式会社 / 取締役', section:'event', status:'new', note:'エンタメ×スタートアップのCVC担当。投資先企業へのリファラル可能性' },
+  { name:'千葉 佳織', company:'株式会社kaeka / 代表取締役CEO', section:'event', status:'pending', note:'エージェント向け営業トレーニングの切り口でウェビナー共催の可能性' },
+  { name:'古川 健介', company:'アル株式会社 / 代表取締役', section:'event', status:'pending', note:'X30万フォロワーの著名起業家。コンテンツコラボ価値あり' },
+  { name:'髙橋 史好', company:'concon株式会社 / 代表取締役CEO', section:'event', status:'pending', note:'2000年生まれ(25歳)。慶應大出身。日本青年会議所TOYP選出' },
+  { name:'片石 貴展', company:'株式会社yutori', section:'event', status:'pending', note:'知人経由でのアプローチ' },
+  { name:'秋元 里奈', company:'—', section:'event', status:'pending', note:'返信あり' },
+
+  // ── ウェビナー ──
+  { name:'インプレッション', company:'', section:'webinar', status:'new', note:'' },
+  { name:'メディアエイド', company:'', section:'webinar', status:'new', note:'' },
+  { name:'ネオキャリア', company:'', section:'webinar', status:'new', note:'' },
+
+  // ── YouTube ──
+  { name:'高野さん（Key Players）', company:'@keyplayers', section:'youtube', status:'confirmed', note:'' },
+  { name:'HRmarker', company:'@HRMAKERryoma', section:'youtube', status:'confirmed', note:'' },
+  { name:'HERP', company:'YouTube公式', section:'youtube', status:'confirmed', note:'' },
+  { name:'アナザーワークス', company:'@obayashi_career', section:'youtube', status:'confirmed', note:'' },
+  { name:'酒井さん（人材紹介）', company:'@sakai-jinzai-shokai', section:'youtube', status:'confirmed', note:'' },
+  { name:'コックピット', company:'@cockpit_hr', section:'youtube', status:'confirmed', note:'' },
+  { name:'M&A CAMP', company:'@macamp0817', section:'youtube', status:'pending', note:'' },
+  { name:'トプシュー', company:'@topsyu_tenshoku', section:'youtube', status:'pending', note:'' },
+  { name:'UZUZ 岡本さん', company:'@uzuz5236', section:'youtube', status:'pending', note:'' },
+  { name:'ツナグバ', company:'@tsunagubapr', section:'youtube', status:'pending', note:'' },
+  { name:'マルゴト', company:'@marugotoch', section:'youtube', status:'pending', note:'' },
+  { name:'採用こっそり相談室 (2,470人)', company:'@saiyou-soudan', section:'youtube', status:'new', note:'ペルソナ①直撃。早期打診推奨' },
+  { name:'キッシー社長の採用道 (4,900人)', company:'採用道ch', section:'youtube', status:'new', note:'経営者×採用。ペルソナ①に直結' },
+  { name:'儲かり学 スモビジまん (2.46万)', company:'スモールビジネスstudio', section:'youtube', status:'new', note:'起業・新規事業層への認知拡大' },
+  { name:'アントレ フランチャイズ起業TV (10.3万)', company:'本命枠', section:'youtube', status:'target', note:'規模最大。起業・独立層への直接リーチ' },
+  { name:'社長名鑑', company:'経営者インタビュー専門', section:'youtube', status:'target', note:'権威づけ・経営者層への認知' },
+  { name:'PIVOT (400万人)', company:'@pivot00', section:'youtube', status:'target', note:'希望枠。登録者最大級' },
+  { name:'キャリナー', company:'', section:'youtube', status:'new', note:'' },
+  { name:'リメディ', company:'', section:'youtube', status:'new', note:'' },
+  { name:'YOUTRUST（YouTube）', company:'YOUTRUST', section:'youtube', status:'new', note:'' },
+
+  // ── インタビュー記事 ──
+  { name:'YOUTRUST', company:'YOUTRUST', section:'interview', status:'new', note:'' },
+  { name:'スローガン', company:'スローガン株式会社', section:'interview', status:'new', note:'' },
+  { name:'HRog', company:'HRog', section:'interview', status:'new', note:'' },
 ];
 
-const statusLabel = {
+const cbStatusLabel = {
   confirmed: '<span class="badge badge-green">✅ 確定</span>',
   pending:   '<span class="badge badge-orange">🔄 打診中</span>',
   new:       '<span class="badge badge-gray">📌 未打診</span>',
   target:    '<span class="badge badge-blue">🎯 希望枠</span>',
+  ng:        '<span class="badge badge-red">❌ 見送り</span>',
 };
 
-function updateYTCounts() {
-  const saved = load('yt', {});
-  const extra = load('yt_extra', []);
-  let confirmed = 0, pending = 0;
-  ytData.forEach((d, i) => {
-    const status = saved[`status_${i}`] || d.status;
-    if (status === 'confirmed') confirmed++;
-    else if (status === 'pending') pending++;
-  });
-  extra.forEach(d => {
-    if ((d.status||'') === 'confirmed') confirmed++;
-    else if ((d.status||'') === 'pending') pending++;
-  });
-  const ce = document.getElementById('yt-confirmed-count');
-  const pe = document.getElementById('yt-pending-count');
-  if (ce) ce.textContent = confirmed + '件';
-  if (pe) pe.textContent = pending + '件';
-}
-
-function renderYT() {
-  const saved = load('yt', {});
-  const extra = load('yt_extra', []);
-  const tb = document.getElementById('yt-tbody');
-
-  // Fixed rows
-  const fixedRows = ytData.map((d, i) => {
-    const rec    = saved[`rec_${i}`]    || '';
-    const pub    = saved[`pub_${i}`]    || '';
-    const note   = saved[`note_${i}`]  || d.note || '';
-    const status = saved[`status_${i}`] || d.status;
-    return `<tr>
-      <td><strong>${d.name}</strong><br><span style="font-size:10px;color:var(--txg)">${d.handle}</span></td>
-      <td class="center">
-        <select onchange="saveYT('status_${i}',this.value);updateYTCounts();renderDashboardSchedule()" style="font-size:10px;border:1px solid var(--border);border-radius:4px;padding:2px 4px">
-          <option value="confirmed" ${status==='confirmed'?'selected':''}>✅ 確定</option>
-          <option value="pending"   ${status==='pending'  ?'selected':''}>🔄 打診中</option>
-          <option value="new"       ${status==='new'      ?'selected':''}>📌 未打診</option>
-          <option value="target"    ${status==='target'   ?'selected':''}>🎯 希望枠</option>
-        </select>
-      </td>
-      <td class="center"><input type="date" class="date-input" value="${rec}"
-        onchange="saveYT('rec_${i}',this.value);renderDashboardSchedule()"></td>
-      <td class="center"><input type="date" class="date-input" value="${pub}"
-        onchange="saveYT('pub_${i}',this.value);renderDashboardSchedule()"></td>
-      <td><input class="editable" value="${note}" placeholder="メモ..."
-        onchange="saveYT('note_${i}',this.value)"></td>
-      <td></td>
-    </tr>`;
-  }).join('');
-
-  // Extra (user-added) rows
-  const extraRows = extra.map((d, i) => {
-    return `<tr style="background:var(--lt-green)">
-      <td><input class="editable" value="${d.name||''}" placeholder="チャンネル名"
-        onchange="saveYTExtra(${i},'name',this.value)"></td>
-      <td class="center">
-        <select onchange="saveYTExtra(${i},'status',this.value);updateYTCounts();renderDashboardSchedule()" style="font-size:10px;border:1px solid var(--border);border-radius:4px;padding:2px 4px">
-          <option value="confirmed" ${(d.status||'')==='confirmed'?'selected':''}>✅ 確定</option>
-          <option value="pending"   ${(d.status||'')==='pending'  ?'selected':''}>🔄 打診中</option>
-          <option value="new"       ${(d.status||'')==='new'      ?'selected':''}>📌 未打診</option>
-          <option value="target"    ${(d.status||'')==='target'   ?'selected':''}>🎯 希望枠</option>
-        </select>
-      </td>
-      <td class="center"><input type="date" class="date-input" value="${d.rec||''}"
-        onchange="saveYTExtra(${i},'rec',this.value);renderDashboardSchedule()"></td>
-      <td class="center"><input type="date" class="date-input" value="${d.pub||''}"
-        onchange="saveYTExtra(${i},'pub',this.value);renderDashboardSchedule()"></td>
-      <td><input class="editable" value="${d.note||''}" placeholder="メモ..."
-        onchange="saveYTExtra(${i},'note',this.value)"></td>
-      <td class="center"><button class="del-btn" onclick="deleteYTExtra(${i})" title="削除">🗑️</button></td>
-    </tr>`;
-  }).join('');
-
-  tb.innerHTML = fixedRows + extraRows;
-  updateYTCounts();
-}
-
-function saveYT(key, val) {
-  const data = load('yt', {});
-  data[key] = val;
-  save('yt', data);
-}
-
-function saveYTExtra(i, field, val) {
-  const extra = load('yt_extra', []);
-  if (!extra[i]) extra[i] = {};
-  extra[i][field] = val;
-  save('yt_extra', extra);
-}
-
-function deleteYTExtra(i) {
-  if (!confirm('このコラボ先を削除しますか？')) return;
-  const extra = load('yt_extra', []);
-  extra.splice(i, 1);
-  save('yt_extra', extra);
-  renderYT();
-}
-
-function addYTRow() {
-  const name   = document.getElementById('yt-new-name').value.trim();
-  const status = document.getElementById('yt-new-status').value;
-  const rec    = document.getElementById('yt-new-rec').value.trim();
-  const pub    = document.getElementById('yt-new-pub').value.trim();
-  const note   = document.getElementById('yt-new-note').value.trim();
-  if (!name) { alert('チャンネル名を入力してください'); return; }
-  const extra = load('yt_extra', []);
-  extra.push({ name, status, rec, pub, note });
-  save('yt_extra', extra);
-  document.getElementById('yt-new-name').value = '';
-  document.getElementById('yt-new-rec').value  = '';
-  document.getElementById('yt-new-pub').value  = '';
-  document.getElementById('yt-new-note').value = '';
-  document.getElementById('yt-new-status').value = 'new';
-  renderYT();
-  renderDashboardSchedule();
-}
-
-// ═══════════════════════════════════════════
-// FB APPROACH LIST
-// ═══════════════════════════════════════════
-const fbApproachData = [
-  {no:2,  name:'高野 秀敏',   company:'株式会社キープレイヤーズ', role:'代表取締役CEO', judge:'◎', method:'ウェビナー共催・メッセージDM', canApproach:'○', initStatus:'done',  note:'人材業界の重鎮。SNS影響力No.1クラス。共催ウェビナーで相互集客が最有望'},
-  {no:5,  name:'山本玲奈',    company:'株式会社ヒュープロ', role:'代表取締役CEO', judge:'◎', method:'ウェビナー共催・メッセージDM', canApproach:'○', initStatus:'sched', note:'Forbes Japan 30 Under 30選出。士業・管理部門特化エージェントの先輩経営者'},
-  {no:9,  name:'寺口 浩大',   company:'株式会社ワンキャリア', role:'Evangelist / PR Director', judge:'◎', method:'ウェビナー共催・PR連携', canApproach:'△', initStatus:'wait',  note:'ONE CAREERとの共催は集客力×認知向上に有望'},
-  {no:15, name:'黒崎 駿',     company:'株式会社プレックス', role:'代表取締役CEO', judge:'◎', method:'ウェビナー共催・メッセージDM', canApproach:'○', initStatus:'reply', note:'人材紹介×DX×M&Aの成功経営者。共催で相互集客・影響力補完が期待大'},
-  {no:16, name:'金井 芽衣',   company:'ポジウィル株式会社', role:'代表取締役社長', judge:'◎', method:'ウェビナー共催・メッセージDM', canApproach:'△', initStatus:'done',  note:'キャリア支援×人材紹介の親和性高。共催で双方のターゲット層にリーチ可能'},
-  {no:17, name:'小川嶺',      company:'株式会社タイミー', role:'代表取締役CEO', judge:'◎', method:'ウェビナー共催・メッセージDM', canApproach:'×', initStatus:'refer', note:'スポットワーク×正社員転換支援の接点で共催価値大。2024年上場'},
-  {no:18, name:'中嶋 汰朗',   company:'株式会社ROXX', role:'代表取締役社長', judge:'◎', method:'ウェビナー共催・メッセージDM', canApproach:'○', initStatus:'reply', note:'agent bankは人材紹介会社の重要プラットフォーム。8/6ウェビナー共催済'},
-  {no:27, name:'石黒 卓弥',   company:'株式会社LayerX', role:'執行役員 CCO', judge:'◎', method:'ウェビナー共催・メッセージDM', canApproach:'×', initStatus:'refer', note:'人事・採用・組織開発のトッププロ。採用支援・人材業界との親和性が非常に高い'},
-  {no:28, name:'曽山 哲人',   company:'株式会社サイバーエージェント', role:'常務執行役員 CHO', judge:'◎', method:'ウェビナー共催・イベント登壇依頼', canApproach:'×', initStatus:'refer', note:'日本最大級のHR実務者・思想家。人材紹介業界への発信・共催価値が最高クラス'},
-  {no:31, name:'森本 千賀子', company:'株式会社morich', role:'代表取締役 All-Rounder Agent', judge:'◎', method:'ウェビナー共催・メッセージDM', canApproach:'×', initStatus:'sched', note:'リクルート25年・累計売上歴代トップ。NHKプロフェッショナル出演。国内最高クラスの影響力'},
-  {no:4,  name:'坡山 里帆',   company:'株式会社Sworkers', role:'代表取締役CEO', judge:'○', method:'メッセージDM・共催企画', canApproach:'○', initStatus:'done',  note:'人材紹介事業の先輩経営者。情報交換・共催・リファラル連携が有効'},
-  {no:6,  name:'新居 日南恵', company:'Cookpad / NPO manma', role:'研究員 / エグゼクティブディレクター', judge:'○', method:'メッセージDM・イベント登壇依頼', canApproach:'○', initStatus:'skip',  note:'女性×キャリア×社会起業。共催やコンテンツ連携で価値提供'},
-  {no:14, name:'与田 涼介',   company:'ウェルマーケ株式会社', role:'代表取締役CEO', judge:'○', method:'ウェビナー共催・メッセージDM', canApproach:'△', initStatus:'skip',  note:'医療介護特化の人材紹介代表。共催や情報交換で双方価値あり'},
-  {no:1,  name:'吉岡 諒',     company:'株式会社ウィルゲート', role:'専務取締役 COO', judge:'△', method:'ウェビナー共催・SNS連携', canApproach:'○', initStatus:'sched', note:'SEO×人材紹介コンテンツ共催の可能性。競合ではなく補完関係'},
-  {no:7,  name:'磯田 将太',   company:'グロービス・キャピタル・パートナーズ', role:'プリンシパル', judge:'△', method:'メッセージDM', canApproach:'○', initStatus:'ng',    note:'VCとのリレーション構築→投資先企業へのリファラル源候補'},
-  {no:8,  name:'森川 朋彦',   company:'松竹ベンチャーズ株式会社', role:'取締役・常務執行役員', judge:'△', method:'メッセージDM', canApproach:'△', initStatus:'skip',  note:'エンタメ×スタートアップのCVC担当。投資先企業へのリファラル可能性'},
-  {no:10, name:'石倉 和宏',   company:'アカツキ / アカツキベンチャーズ', role:'取締役副社長 CFO&CSO', judge:'△', method:'メッセージDM', canApproach:'△', initStatus:'ng',    note:'CVC経由で投資先へのリファラル可能性'},
-  {no:11, name:'清水 夕稀',   company:'インキュベイトファンド（退職）', role:'PR・コミュニケーション ディレクター', judge:'△', method:'メッセージDM', canApproach:'△', initStatus:'skip',  note:'ビズリーチ出身。VC人脈でのリファラル可能性。現在の所属先不明'},
-  {no:12, name:'長南佑輔',    company:'合同会社DMM.com', role:'COO室 室長', judge:'△', method:'メッセージDM', canApproach:'○', initStatus:'refer', note:'お客さんに紹介していて、人材紹介の結果がセンシティブなので少し時間おく'},
-  {no:13, name:'Younsil Kim', company:'株式会社M&Aサクシード', role:'代表取締役社長', judge:'△', method:'メッセージDM', canApproach:'△', initStatus:'skip',  note:'リクルート出身→ビジョナルグループ。M&A後の組織強化ニーズで接点探る余地あり'},
-  {no:19, name:'宮田 昇始',   company:'株式会社SmartHR', role:'代表取締役CEO', judge:'△', method:'メッセージDM・業界イベント', canApproach:'×', initStatus:'refer', note:'人事SaaSの雄。共催イベント・情報交換で人材紹介層へのリーチに価値あり'},
-  {no:20, name:'経沢 香保子', company:'株式会社キッズライン（元代表）', role:'創業者・元代表取締役社長', judge:'△', method:'メッセージDM・イベント登壇', canApproach:'×', initStatus:'refer', note:'女性起業家のアイコン。SNS影響力大。退任後の次の動きに注目'},
-  {no:21, name:'寺田 修輔',   company:'Dual Bridge Capital', role:'代表パートナー', judge:'△', method:'メッセージDM', canApproach:'×', initStatus:'refer', note:'VC投資家。投資先への紹介・リファラル源として関係構築に価値あり'},
-  {no:24, name:'千葉 佳織',   company:'株式会社kaeka', role:'代表取締役CEO', judge:'△', method:'メッセージDM・共催ウェビナー', canApproach:'×', initStatus:'refer', note:'エージェント向け営業トレーニングの切り口でウェビナー共催の可能性'},
-  {no:25, name:'古川 健介',   company:'アル株式会社', role:'代表取締役', judge:'△', method:'メッセージDM・コラボコンテンツ', canApproach:'×', initStatus:'refer', note:'X30万フォロワーの著名起業家。コンテンツコラボ価値あり'},
-  {no:26, name:'山本 正喜',   company:'株式会社kubell（旧Chatwork）', role:'代表取締役CEO', judge:'△', method:'メッセージDM', canApproach:'×', initStatus:'refer', note:'SaaS・BPaaSの上場企業CEO。業界イベントでの関係構築価値あり'},
-  {no:29, name:'髙橋 史好',   company:'concon株式会社', role:'代表取締役CEO', judge:'△', method:'メッセージDM', canApproach:'×', initStatus:'refer', note:'2000年生まれ(25歳)。慶應大出身。日本青年会議所TOYP選出'},
-  {no:22, name:'尾﨑 美紀',   company:'—', role:'—', judge:'△', method:'知人経由', canApproach:'×', initStatus:'refer', note:'知人経由でのアプローチ'},
-  {no:23, name:'秋元 里奈',   company:'—', role:'—', judge:'△', method:'メッセージDM', canApproach:'×', initStatus:'reply', note:'返信あり'},
-  {no:30, name:'片石 貴展',   company:'—', role:'—', judge:'△', method:'知人経由', canApproach:'×', initStatus:'refer', note:'知人経由でのアプローチ'},
-];
-
-const fbStatusLabel = {
-  none:  '<span class="badge badge-gray">未打診</span>',
-  sent:  '<span class="badge badge-orange">打診済</span>',
-  wait:  '<span class="badge badge-blue">返信待ち</span>',
-  reply: '<span class="badge badge-blue">返信あり</span>',
-  sched: '<span class="badge badge-orange">日程調整中</span>',
-  done:  '<span class="badge badge-green">完了</span>',
-  ng:    '<span class="badge badge-red">見送り</span>',
-  skip:  '<span class="badge badge-gray">対象外</span>',
-  refer: '<span class="badge badge-purple">知人経由</span>',
+const cbSectionLabel = {
+  event:     '🎤 登壇イベント',
+  webinar:   '📅 ウェビナー',
+  youtube:   '▶️ YouTube',
+  interview: '📝 インタビュー記事',
 };
 
-const fbJudgeColor = { '◎':'#E8F8F8;color:#46A5A5;font-weight:700', '○':'#EAF4FB;color:#216FBB', '△':'#FFF8E5;color:#E67E22', '×':'#FFE9E9;color:#C0392B' };
+function cbLoad() {
+  const raw = localStorage.getItem(COLLAB_KEY);
+  return raw ? JSON.parse(raw) : JSON.parse(JSON.stringify(collabInitial));
+}
 
-const fbRowBg = {
-  none:  '',
-  sent:  'background:#FFF8EE',
-  wait:  'background:#EFF4FB',
-  reply: 'background:#E3EEF9',
-  sched: 'background:#FFF3E0',
-  done:  'background:#E8F5E9',
-  ng:    'background:#F5F5F5;opacity:.55',
-  skip:  'background:#F3F4F6;opacity:.45',
-  refer: 'background:#F5F3FF',
-};
-const fbLeftBorder = {
-  none:  '#D1D5DB',
-  sent:  '#C96A00',
-  wait:  '#216FBB',
-  reply: '#1558A0',
-  sched: '#E67E22',
-  done:  '#1D7A4A',
-  ng:    '#9CA3AF',
-  skip:  '#CBD5E1',
-  refer: '#7C3AED',
-};
+function cbSave(data) {
+  localStorage.setItem(COLLAB_KEY, JSON.stringify(data));
+}
 
-function renderFB() {
-  const saved = load('fb_approach', {});
-  const tb = document.getElementById('fb-tbody');
+function cbUpdateCounts() {
+  const data = cbLoad();
+  const counts = { confirmed:0, pending:0, new:0, target:0, ng:0 };
+  data.forEach(d => { if (counts[d.status] !== undefined) counts[d.status]++; });
+  const el = id => document.getElementById(id);
+  if (el('cb-confirmed-count')) el('cb-confirmed-count').textContent = counts.confirmed + '件';
+  if (el('cb-pending-count'))   el('cb-pending-count').textContent   = counts.pending   + '件';
+  if (el('cb-new-count'))       el('cb-new-count').textContent       = counts.new       + '件';
+  if (el('cb-target-count'))    el('cb-target-count').textContent    = counts.target    + '件';
+}
+
+function cbRenderSection(section) {
+  const tbId = `cb-${section}-tbody`;
+  const tb = document.getElementById(tbId);
   if (!tb) return;
-
-  const counts = {none:0, sent:0, wait:0, reply:0, sched:0, done:0, ng:0, skip:0, refer:0};
-
-  const rows = fbApproachData.map((d, i) => {
-    const status = saved[`st_${i}`] || d.initStatus || 'none';
-    const memo   = saved[`memo_${i}`] || '';
-    counts[status] = (counts[status] || 0) + 1;
-    const jStyle = fbJudgeColor[d.judge] || '';
-    const rowStyle = fbRowBg[status] || '';
-    const borderColor = fbLeftBorder[status] || '#D1D5DB';
-    return `<tr style="${rowStyle}">
-      <td class="center" style="background:${jStyle};font-size:12px;border-left:4px solid ${borderColor}">${d.judge}</td>
-      <td><strong style="font-size:11px">${d.name}</strong></td>
-      <td style="font-size:10px"><strong>${d.company}</strong><br><span style="color:var(--txg)">${d.role}</span></td>
-      <td class="center" style="white-space:nowrap">
-        <div style="margin-bottom:4px">${fbStatusLabel[status]}</div>
+  const data = cbLoad();
+  const items = data.map((d, idx) => ({ ...d, _idx: idx })).filter(d => d.section === section);
+  if (items.length === 0) {
+    tb.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--txg);padding:12px;font-size:12px">まだ項目がありません</td></tr>`;
+    return;
+  }
+  tb.innerHTML = items.map(d => {
+    const bg = d.status === 'confirmed' ? 'background:#f0fff4' : d.status === 'ng' ? 'background:#f5f5f5;opacity:.6' : '';
+    const otherSections = Object.keys(cbSectionLabel).filter(s => s !== section);
+    const moveOptions = otherSections.map(s => `<option value="${s}">${cbSectionLabel[s]}</option>`).join('');
+    const statusOptions = Object.keys(cbStatusLabel).map(s =>
+      `<option value="${s}" ${d.status===s?'selected':''}>${s==='confirmed'?'✅ 確定':s==='pending'?'🔄 打診中':s==='new'?'📌 未打診':s==='target'?'🎯 希望枠':'❌ 見送り'}</option>`
+    ).join('');
+    return `<tr style="${bg}">
+      <td><strong style="font-size:12px">${escHtml(d.name)}</strong></td>
+      <td style="font-size:11px;color:var(--txg)">${escHtml(d.company||'')}</td>
+      <td>
         <select style="font-size:10px;border:1px solid var(--border);border-radius:4px;padding:2px 4px"
-          onchange="saveFB('st_${i}',this.value);renderFB()">
-          <option value="none"  ${status==='none' ?'selected':''}>未打診</option>
-          <option value="sent"  ${status==='sent' ?'selected':''}>打診済</option>
-          <option value="wait"  ${status==='wait' ?'selected':''}>返信待ち</option>
-          <option value="reply" ${status==='reply'?'selected':''}>返信あり</option>
-          <option value="sched" ${status==='sched'?'selected':''}>日程調整中</option>
-          <option value="done"  ${status==='done' ?'selected':''}>完了</option>
-          <option value="ng"    ${status==='ng'   ?'selected':''}>見送り</option>
-          <option value="skip"  ${status==='skip' ?'selected':''}>アプローチしない</option>
-          <option value="refer" ${status==='refer'?'selected':''}>知人経由</option>
+          onchange="cbChangeStatus(${d._idx},this.value)">
+          ${statusOptions}
         </select>
       </td>
-      <td><input class="editable" value="${memo.replace(/"/g,'&quot;')}" placeholder="${d.note.substring(0,25)}..."
-        onchange="saveFB('memo_${i}',this.value)" style="font-size:10px"></td>
+      <td><input class="editable" style="font-size:11px" value="${escHtml(d.note||'')}" placeholder="メモ..."
+        onchange="cbChangeNote(${d._idx},this.value)"></td>
+      <td>
+        <select style="font-size:10px;border:1px solid var(--border);border-radius:4px;padding:2px 6px"
+          onchange="cbMove(${d._idx},this.value)">
+          <option value="">── 移動先 ──</option>
+          ${moveOptions}
+        </select>
+      </td>
+      <td class="center"><button class="del-btn" onclick="cbDelete(${d._idx})" title="削除">🗑️</button></td>
     </tr>`;
   }).join('');
-
-  tb.innerHTML = rows;
-
-  // バッジ更新
-  const bdg = (id, label, n) => { const el=document.getElementById(id); if(el) el.textContent=`${label} ${n}`; };
-  bdg('fb-badge-none',  '未打診',   counts.none  || 0);
-  bdg('fb-badge-sent',  '打診済',   counts.sent  || 0);
-  bdg('fb-badge-wait',  '返信待ち', counts.wait  || 0);
-  bdg('fb-badge-reply', '返信あり', counts.reply || 0);
-  bdg('fb-badge-sched', '日程調整中', counts.sched || 0);
-  bdg('fb-badge-done',  '完了',     counts.done  || 0);
-  bdg('fb-badge-ng',    '見送り',   counts.ng    || 0);
-  bdg('fb-badge-skip',  '対象外',   counts.skip  || 0);
-  bdg('fb-badge-refer', '知人経由', counts.refer || 0);
 }
 
-function saveFB(key, val) {
-  const data = load('fb_approach', {});
-  data[key] = val;
-  save('fb_approach', data);
+function cbRender() {
+  ['event','webinar','youtube','interview'].forEach(s => cbRenderSection(s));
+  cbUpdateCounts();
 }
+
+function cbChangeStatus(idx, val) {
+  const data = cbLoad();
+  if (!data[idx]) return;
+  data[idx].status = val;
+  cbSave(data);
+  cbRender();
+}
+
+function cbChangeNote(idx, val) {
+  const data = cbLoad();
+  if (!data[idx]) return;
+  data[idx].note = val;
+  cbSave(data);
+  cbUpdateCounts();
+}
+
+function cbMove(idx, newSection) {
+  if (!newSection) return;
+  const data = cbLoad();
+  if (!data[idx]) return;
+  data[idx].section = newSection;
+  cbSave(data);
+  cbRender();
+}
+
+function cbDelete(idx) {
+  if (!confirm('この項目を削除しますか？')) return;
+  const data = cbLoad();
+  data.splice(idx, 1);
+  cbSave(data);
+  cbRender();
+}
+
+function cbAdd() {
+  const name    = document.getElementById('cb-new-name').value.trim();
+  const company = document.getElementById('cb-new-company').value.trim();
+  const section = document.getElementById('cb-new-section').value;
+  const status  = document.getElementById('cb-new-status').value;
+  const note    = document.getElementById('cb-new-note').value.trim();
+  if (!name) { alert('名前を入力してください'); return; }
+  const data = cbLoad();
+  data.push({ name, company, section, status, note });
+  cbSave(data);
+  cbRender();
+  ['cb-new-name','cb-new-company','cb-new-note'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('cb-new-section').value = 'youtube';
+  document.getElementById('cb-new-status').value = 'new';
+}
+
+// yt 互換: renderDashboardSchedule が ytData を参照するため維持
+const ytData = collabInitial.filter(d => d.section === 'youtube').map(d => ({
+  name: d.name, handle: d.company || '', status: d.status, note: d.note
+}));
 
 // ═══════════════════════════════════════════
 // CASE STUDY (with KPI sync)
@@ -2339,10 +2273,9 @@ function renderDashboardSchedule() {
     items.push({ dt, label: sv.name, sub: subLabel, type: itemType, dateStr: ds });
   });
 
-  // YouTube collabs with dates
+  // YouTube collabs from collab data (date info preserved from legacy yt storage)
   const ytSaved = load('yt', {});
   const ytExtra = load('yt_extra', []);
-
   ytData.forEach((d, i) => {
     const status = ytSaved[`status_${i}`] || d.status;
     const pub    = ytSaved[`pub_${i}`]    || '';
@@ -2787,8 +2720,7 @@ migrateWebinarExtra();
 renderBars();
 renderWeeklyTopics();
 renderMonthly();
-renderYT();
-renderFB();
+cbRender();
 renderCases();
 renderShorts();
 renderWebinars();
