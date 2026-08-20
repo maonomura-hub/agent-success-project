@@ -1642,15 +1642,23 @@ function cbRenderSection(section) {
     tb.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--txg);padding:12px;font-size:12px">まだ項目がありません</td></tr>`;
     return;
   }
+  const cbRowStyle = {
+    confirmed: { bg:'#E8F8F0', border:'#1D9A5A', text:'#0f5132' },
+    pending:   { bg:'#FFF4E5', border:'#E07B39', text:'#7c4300' },
+    new:       { bg:'#F7F8FA', border:'#C8CDD5', text:'#444'    },
+    target:    { bg:'#EEF4FF', border:'#3A7DC9', text:'#1a3c6e' },
+    ng:        { bg:'#F3F4F6', border:'#9CA3AF', text:'#888'    },
+  };
   tb.innerHTML = items.map(d => {
-    const bg = d.status === 'confirmed' ? 'background:#f0fff4' : d.status === 'ng' ? 'background:#f5f5f5;opacity:.6' : '';
+    const rs = cbRowStyle[d.status] || cbRowStyle['new'];
     const otherSections = Object.keys(cbSectionLabel).filter(s => s !== section);
     const moveOptions = otherSections.map(s => `<option value="${s}">${cbSectionLabel[s]}</option>`).join('');
     const statusOptions = Object.keys(cbStatusLabel).map(s =>
       `<option value="${s}" ${d.status===s?'selected':''}>${s==='confirmed'?'✅ 確定':s==='pending'?'🔄 打診中':s==='new'?'📌 未打診':s==='target'?'🎯 希望枠':'❌ 見送り'}</option>`
     ).join('');
-    return `<tr style="${bg}">
-      <td><strong style="font-size:12px">${escHtml(d.name)}</strong></td>
+    const opacity = d.status === 'ng' ? 'opacity:.55;' : '';
+    return `<tr style="background:${rs.bg};${opacity}border-left:4px solid ${rs.border}">
+      <td><strong style="font-size:12px;color:${rs.text}">${escHtml(d.name)}</strong></td>
       <td style="font-size:11px;color:var(--txg)">${escHtml(d.company||'')}</td>
       <td>
         <select style="font-size:10px;border:1px solid var(--border);border-radius:4px;padding:2px 4px"
