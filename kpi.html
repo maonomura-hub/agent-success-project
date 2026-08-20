@@ -443,6 +443,7 @@ input[type=number].wb-num-input{-moz-appearance:textfield}
   <button class="tab-btn" onclick="switchTab('content',this)">📝 コンテンツ</button>
   <button class="tab-btn" onclick="switchTab('webinar',this)">📅 ウェビナー</button>
   <button class="tab-btn" onclick="switchTab('persona',this)">🎯 ペルソナ×LP</button>
+  <button class="tab-btn" onclick="switchTab('pressrelease',this)">📰 PRリスト</button>
 </div>
 
 <!-- ────────────────────────────────────── -->
@@ -1095,6 +1096,146 @@ input[type=number].wb-num-input{-moz-appearance:textfield}
   </div>
   <div class="memo-footer">自動保存 ✓ — リロード後も保持されます</div>
 </div>
+
+<!-- ────────────────────────────────────── -->
+<!-- TAB: PRESS RELEASE LIST -->
+<!-- ────────────────────────────────────── -->
+<div id="tab-pressrelease" class="tab-panel">
+  <h2 style="margin-bottom:16px;">📰 プレスリリース一覧</h2>
+
+  <!-- 追加フォーム -->
+  <div style="background:#f0f4ff;border:1px solid #c8d8ff;border-radius:10px;padding:18px 20px;margin-bottom:24px;">
+    <div style="font-weight:700;font-size:15px;margin-bottom:12px;color:#2a3a6e;">＋ 新規ネタを追加</div>
+    <div style="display:grid;grid-template-columns:1fr 2fr 1fr;gap:10px;margin-bottom:10px;">
+      <input id="pr-title" placeholder="タイトル（テーマ）" style="padding:8px 10px;border:1px solid #ccc;border-radius:6px;font-size:14px;">
+      <input id="pr-summary" placeholder="概要" style="padding:8px 10px;border:1px solid #ccc;border-radius:6px;font-size:14px;">
+      <input id="pr-company" placeholder="関係会社" style="padding:8px 10px;border:1px solid #ccc;border-radius:6px;font-size:14px;">
+    </div>
+    <div style="display:grid;grid-template-columns:2fr 1fr auto;gap:10px;align-items:center;">
+      <input id="pr-file" placeholder="ファイル名 or URL" style="padding:8px 10px;border:1px solid #ccc;border-radius:6px;font-size:14px;">
+      <select id="pr-status" style="padding:8px 10px;border:1px solid #ccc;border-radius:6px;font-size:14px;">
+        <option value="未作成">未作成</option>
+        <option value="完成">完成</option>
+        <option value="作成中">作成中</option>
+        <option value="公開済">公開済</option>
+      </select>
+      <button onclick="prAdd()" style="padding:8px 20px;background:#3a7dc9;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:700;cursor:pointer;">追加</button>
+    </div>
+  </div>
+
+  <!-- テーブル -->
+  <div style="overflow-x:auto;">
+    <table id="pr-table" style="width:100%;border-collapse:collapse;font-size:14px;">
+      <thead>
+        <tr style="background:#0a192f;color:#fff;">
+          <th style="padding:10px 12px;text-align:center;width:48px;">No.</th>
+          <th style="padding:10px 12px;text-align:left;">タイトル（テーマ）</th>
+          <th style="padding:10px 12px;text-align:left;">関係会社</th>
+          <th style="padding:10px 12px;text-align:left;">概要</th>
+          <th style="padding:10px 12px;text-align:left;">ファイル名</th>
+          <th style="padding:10px 12px;text-align:center;width:80px;">ステータス</th>
+          <th style="padding:10px 12px;text-align:center;width:48px;">削除</th>
+        </tr>
+      </thead>
+      <tbody id="pr-tbody"></tbody>
+    </table>
+  </div>
+  <div style="font-size:12px;color:#888;margin-top:10px;">自動保存 ✓ — リロード後も保持されます</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// PRESS RELEASE TAB
+// ═══════════════════════════════════════════
+const PR_KEY = 'as_pr_list';
+
+const PR_INITIAL = [
+  { title: 'AGENT SUCCESS CCHグループ参画・業務提携', company: 'AGENT SUCCESS、CCH', summary: '売上高124億円・従業員906名CCHグループへの参画＋ネクスカとの業務提携を統合発信。AI時代×採用難の文脈でAS支援を中小・スタートアップの成長エンジンへ', file: 'press_release_AGENTSUCCESS_CCHグループ参画_v2_draft.docx', status: '完成' },
+  { title: 'RYOMA×AGENT SUCCESS 業務提携', company: 'RYOMA、AGENT SUCCESS', summary: 'HRMAKERの立ち上げ検討層への送客×AS実務支援。人材紹介会社の共同展開', file: 'プレスリリース_RYOMA×AGENTSUCCESS_業務提携_20260727.docx', status: '完成' },
+  { title: 'YouTube登録者100名突破', company: 'AGENT SUCCESS', summary: '公式YouTube登録者100名突破。立ち上げから収益化を動画で体系化、業界への情報発信を本格始動', file: 'プレスリリース_YouTube登録者100名突破_20260727.docx', status: '完成' },
+  { title: 'ウェビナー登壇10回突破・共催募集', company: 'AGENT SUCCESS', summary: 'PORTERS・CIRCUS・HERP等との共催10回突破。新たな共催パートナーを広く募集', file: 'プレスリリース_ウェビナー登壇10回突破_共催募集_20260727.docx', status: '完成' },
+  { title: '人材紹介業界白書2026年版 発行', company: 'AGENT SUCCESS', summary: '業界構造・参入環境・収益分布・勝ち筋を定量・定性の両面から解明した初の業界白書', file: 'プレスリリース_人材紹介業界白書2026年版_20260727.docx', status: '完成' },
+  { title: '求職者集客ブーストプラン新設', company: 'AGENT SUCCESS', summary: '課題起点の集客手法設計で求職者面談20名を確約。媒体・スカウト・SNS・ウェビナーを組み合わせ', file: 'プレスリリース_集客ブーストプラン新設_20260818.docx', status: '完成' },
+  { title: '野村真央 個人視点リリース「なぜ創り、なぜ売ったか」', company: '野村真央（個人）', summary: '会社ではなく野村真央個人を主語にしたM&A当事者リリース。著者／人材紹介事業アドバイザーとして肩書を再定義し個人ブランドの起点にする', file: '（未作成）', status: '未作成' },
+  { title: '人材紹介業界 実態調査リリース', company: 'AGENT SUCCESS', summary: '年間3,000社が参入し同数が撤退する市場を50社超の伴走データで解明。立ち上げから初受注までの日数・撤退の典型パターン・成功企業の共通点を調査リリース化', file: '（未作成）', status: '未作成' },
+  { title: '書籍『人材紹介ビジネスの始め方』改訂・第2弾企画リリース', company: '野村真央、講談社（日刊現代）', summary: '商業出版著者という肩書に依存しない看板を活かした書籍PR。第2弾構想・改訂・連載展開を新ニュースとして発信', file: '（未作成）', status: '未作成' },
+  { title: 'スモールM&A 売り手当事者インタビュー企画', company: '野村真央、CCH', summary: '「ニッチ市場を自分で作って3年で売った30代経営者」として売り手側の当事者視点を発信。M&A Online等に持ち込み。買い手（CCH）と共同で出すと通りやすい', file: '（未作成）', status: '未作成' },
+  { title: 'M&A BANK YouTube 出演', company: '野村真央、M&A BANK', summary: '2018年設立・経営者向けM&A×EXITメディア「M&A BANK」に野村真央が出演。スモールM&A・HR事業売却のリアルを語る', file: '（動画URL：https://www.youtube.com/@MABANK2018）', status: '完成' },
+  { title: 'IR Robotics主催 登壇イベント企画「M&Aを活用したHR業界における成長戦略」', company: 'AGENT SUCCESS、CCH、ROXX、IR Robotics', summary: '上場（ROXX）× M&A（CCH）× 非上場（AGENT SUCCESS）の3視点でHR経営哲学を議論するリアルイベント。2026年10〜11月開催予定・50名規模', file: 'イベント企画案_IR Robotics様_ご提案.docx', status: '完成' },
+];
+
+const STATUS_COLOR = {
+  '完成':   { bg: '#d4edda', color: '#1a5c2a', border: '#a8d5b5' },
+  '公開済': { bg: '#cce5ff', color: '#004085', border: '#9ecfff' },
+  '作成中': { bg: '#fff3cd', color: '#856404', border: '#ffd97d' },
+  '未作成': { bg: '#e9ecef', color: '#555',    border: '#ccc' },
+};
+
+function prLoad() {
+  const raw = localStorage.getItem(PR_KEY);
+  return raw ? JSON.parse(raw) : [...PR_INITIAL];
+}
+
+function prSave(data) {
+  localStorage.setItem(PR_KEY, JSON.stringify(data));
+}
+
+function prRender() {
+  const data = prLoad();
+  const tbody = document.getElementById('pr-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  data.forEach((item, idx) => {
+    const sc = STATUS_COLOR[item.status] || STATUS_COLOR['未作成'];
+    const tr = document.createElement('tr');
+    tr.style.background = idx % 2 === 0 ? '#fff' : '#f8f9fb';
+    tr.innerHTML = `
+      <td style="padding:10px 12px;text-align:center;color:#888;">${idx + 1}</td>
+      <td style="padding:10px 12px;font-weight:600;">${escHtml(item.title)}</td>
+      <td style="padding:10px 12px;font-size:13px;color:#444;">${escHtml(item.company)}</td>
+      <td style="padding:10px 12px;font-size:13px;color:#555;">${escHtml(item.summary)}</td>
+      <td style="padding:10px 12px;font-size:12px;color:#777;word-break:break-all;">${escHtml(item.file)}</td>
+      <td style="padding:10px 12px;text-align:center;">
+        <span style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:700;background:${sc.bg};color:${sc.color};border:1px solid ${sc.border};">${escHtml(item.status)}</span>
+      </td>
+      <td style="padding:10px 12px;text-align:center;">
+        <button onclick="prDelete(${idx})" style="background:none;border:none;cursor:pointer;font-size:16px;color:#c00;" title="削除">🗑</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function prAdd() {
+  const title   = document.getElementById('pr-title').value.trim();
+  const summary = document.getElementById('pr-summary').value.trim();
+  const company = document.getElementById('pr-company').value.trim();
+  const file    = document.getElementById('pr-file').value.trim();
+  const status  = document.getElementById('pr-status').value;
+  if (!title) { alert('タイトルを入力してください'); return; }
+  const data = prLoad();
+  data.push({ title, company, summary, file: file || '（未作成）', status });
+  prSave(data);
+  prRender();
+  ['pr-title','pr-summary','pr-company','pr-file'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('pr-status').value = '未作成';
+}
+
+function prDelete(idx) {
+  if (!confirm('削除しますか？')) return;
+  const data = prLoad();
+  data.splice(idx, 1);
+  prSave(data);
+  prRender();
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+document.addEventListener('DOMContentLoaded', prRender);
+
+</script>
 
 <script>
 // ═══════════════════════════════════════════
